@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mini-bill-gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.0.121:8848
+        namespace: mini-bill
+        username: nacos
+        password: nacos
+      config:
+        import-check:
+          enabled: false
+    gateway:
+      routes:
+        # 系统服务路由
+        - id: mini-bill-system
+          uri: lb://mini-bill-system
+          predicates:
+            - Path=/system/**
+          filters:
+            - StripPrefix=1
+
+        # 业务服务路由
+        - id: mini-bill-bus
+          uri: lb://mini-bill-bus
+          predicates:
+            - Path=/bus/**
+          filters:
+            - StripPrefix=1
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+
+logging:
+  level:
+    com.minibill: debug

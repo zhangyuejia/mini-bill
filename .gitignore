@@ -1,0 +1,35 @@
+# Java
+*.class
+*.jar
+*.war
+target/
+logs/
+upload/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+log/
+
+# Temp
+*.log
+*.gz
+*.class
+
+# Frontend
+frontend/dist/

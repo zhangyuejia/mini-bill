@@ -1,0 +1,69 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: mini-bill-bus
+  datasource:
+    url: jdbc:postgresql://192.168.0.121:5432/mini-bill-bus?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: wmsuser
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: 192.168.0.121
+      port: 6379
+      password: 123456
+      database: 0
+      timeout: 10s
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.0.121:8848
+        namespace: mini-bill
+        username: nacos
+        password: nacos
+      config:
+        import-check:
+          enabled: false
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: delFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# 文件上传配置
+minibill:
+  file:
+    upload-path: ./upload
+
+# 日志配置
+logging:
+  level:
+    com.minibill: debug
+  file:
+    path: logs
+    name: logs/mini-bill-bus.log
+  logback:
+    rollingpolicy:
+      max-history: 30
+      total-size-cap: 1GB
+      file-name-pattern: logs/mini-bill-bus/${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
