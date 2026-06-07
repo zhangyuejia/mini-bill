@@ -16,6 +16,7 @@
           <el-table-column label="类型" width="120"><template #default="{ row }">{{ row.typeText || row.type || '-' }}</template></el-table-column>
           <el-table-column prop="purchaseAmount" label="购买金额" width="120" align="right" />
           <el-table-column prop="purchaseDate" label="购买日期" width="120" />
+          <el-table-column prop="deactivationDate" label="停用时间" width="120"><template #default="{ row }"><span v-if="row.deactivationDate" style="color:#f56c6c;">{{ row.deactivationDate }}</span><span v-else style="color:#909399;">-</span></template></el-table-column>
           <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
           <el-table-column label="附件" width="70"><template #default="{ row }"><el-tag v-if="row._attachCount" size="small" type="info">{{ row._attachCount }}张</el-tag></template></el-table-column>
           <el-table-column label="操作" width="140" fixed="right"><template #default="{ row }"><el-button link type="primary" size="small" @click="showDialog(row)">编辑</el-button><el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button></template></el-table-column>
@@ -32,6 +33,7 @@
         <el-form-item label="类型"><el-select v-model="form.type" placeholder="选择类型" style="width:100%" :loading="dictLoading"><el-option v-for="d in itemTypes" :key="d.value" :label="d.label" :value="d.value" /></el-select></el-form-item>
         <el-form-item label="购买金额"><el-input-number v-model="form.purchaseAmount" :min="0" :precision="2" style="width:200px" /></el-form-item>
         <el-form-item label="购买日期"><el-date-picker v-model="form.purchaseDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
+        <el-form-item label="停用时间"><el-date-picker v-model="form.deactivationDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width:100%" /><span style="color:#909399;font-size:12px;margin-left:8px;">填写后表示物件已停用</span></el-form-item>
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
         <el-divider content-position="left" class="section-divider">附件（物件图片）</el-divider>
         <el-form-item label="上传图片">
@@ -56,7 +58,7 @@ import { Close } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 const loading = ref(false); const list = ref([]); const total = ref(0)
-const pageNum = ref(1); const pageSize = ref(10); const addresses = ref([]); const query = ref({ addressId: '' })
+const pageNum = ref(1); const pageSize = ref(15); const addresses = ref([]); const query = ref({ addressId: '' })
 const showDlg = ref(false); const isEdit = ref(false); const saving = ref(false)
 const form = ref({ familyId: '', addressId: '', name: '', type: '', purchaseAmount: null, purchaseDate: '', remark: '' })
 const uploadUrl = '/bus/api/file/upload?prefix=item'; const uploadHeaders = { Authorization: 'Bearer ' + localStorage.getItem('token') }; const attachmentList = ref([])

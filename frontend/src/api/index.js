@@ -304,5 +304,8 @@ export const dashboardApi = {
   },
   billCompare(familyId, addressId) {
     return request.get('/bus/dashboard/bill-compare', { params: { familyId, ...(addressId ? { addressId } : {}) } })
+  },
+  itemDailyCost(familyId) {
+    return request.get('/bus/dashboard/item-daily-cost', { params: { familyId } })
   }
 }

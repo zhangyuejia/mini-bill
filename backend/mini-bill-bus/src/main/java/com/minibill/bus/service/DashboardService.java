@@ -8,4 +8,6 @@ public interface DashboardService {
     List<Map<String, Object>> getSavingTrend(Long familyId);
 
     List<Map<String, Object>> getBillCompare(Long familyId, Long addressId);
+
+    List<Map<String, Object>> getItemDailyCost(Long familyId);
 }

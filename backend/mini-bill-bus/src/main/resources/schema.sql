@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS bus_item (
     type VARCHAR(50),
     purchase_amount DECIMAL(10,2),
     purchase_date DATE,
+    deactivation_date DATE,
     remark TEXT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -233,6 +234,7 @@ COMMENT ON COLUMN bus_item.address_id IS '住址ID';
 COMMENT ON COLUMN bus_item.name IS '物件名称';
 COMMENT ON COLUMN bus_item.type IS '物件类型（字典编码 item_type）';
 COMMENT ON COLUMN bus_item.purchase_amount IS '购买金额';
+COMMENT ON COLUMN bus_item.deactivation_date IS '停用时间';
 COMMENT ON COLUMN bus_item.purchase_date IS '购买日期';
 COMMENT ON COLUMN bus_item.remark IS '备注';
 

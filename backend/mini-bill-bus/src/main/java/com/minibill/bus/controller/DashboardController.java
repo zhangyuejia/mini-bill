@@ -33,4 +33,10 @@ public class DashboardController {
                                                          @RequestParam(required = false) Long addressId) {
         return Result.success(dashboardService.getBillCompare(familyId, addressId));
     }
+
+    @Operation(summary = "获取物件日均成本")
+    @GetMapping("/item-daily-cost")
+    public Result<List<Map<String, Object>>> itemDailyCost(@RequestParam Long familyId) {
+        return Result.success(dashboardService.getItemDailyCost(familyId));
+    }
 }

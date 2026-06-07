@@ -67,6 +67,13 @@
           <div class="chart-body" ref="billChartRef" style="height:320px;"></div>
         </div>
       </div>
+      <div class="chart-card" style="margin-top:20px;">
+        <div class="chart-header">
+          <h4>物件日均成本</h4>
+          <span style="font-size:12px;color:#909399;">（总投入 ÷ 持有天数）</span>
+        </div>
+        <div class="chart-body" ref="itemCostChartRef" style="height:400px;"></div>
+      </div>
     </template>
   </div>
 </template>
@@ -84,6 +91,7 @@ const router = useRouter()
 
 const savingChartRef = ref(null)
 const billChartRef = ref(null)
+const itemCostChartRef = ref(null)
 const addresses = ref([])
 const savingYear = ref('')
 const billAddressId = ref(null)
@@ -148,8 +156,51 @@ function renderBillChart(data) {
   return chart
 }
 
+function renderItemCostChart(data) {
+  if (!itemCostChartRef.value) return
+  const chart = echarts.init(itemCostChartRef.value)
+  if (!data || data.length === 0) {
+    chart.setOption({
+      title: { text: '暂无物件数据', left: 'center', top: 'center', textStyle: { color: '#c0c4cc', fontSize: 14 } }
+    })
+    return
+  }
+  const names = data.map(d => d.name)
+  const dailyValues = data.map(d => Number(d.dailyCost) || 0)
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis', axisPointer: { type: 'shadow' },
+      formatter: p => {
+        const d = data[p[0].dataIndex]
+        return `<strong>${d.name}</strong><br/>
+                购买金额：¥${Number(d.purchaseAmount).toLocaleString()}<br/>
+                维护费用：¥${Number(d.maintenanceCost).toLocaleString()}<br/>
+                总投入：¥${Number(d.totalCost).toLocaleString()}<br/>
+                持有天数：${d.daysOwned}天<br/>
+                日均成本：<strong>¥${Number(d.dailyCost).toFixed(2)}</strong>`
+      }
+    },
+    grid: { left: 120, right: 60, top: 20, bottom: 40 },
+    xAxis: { type: 'value', name: '日均成本(元)', axisLabel: { formatter: v => '¥' + v.toFixed(1) } },
+    yAxis: { type: 'category', data: names, axisLabel: { fontSize: 12 } },
+    series: [{
+      type: 'bar', data: dailyValues,
+      barWidth: 20,
+      itemStyle: {
+        borderRadius: [0, 4, 4, 0],
+        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+          { offset: 0, color: '#409eff' }, { offset: 1, color: '#79bbff' }
+        ])
+      },
+      label: { show: true, position: 'right', formatter: p => '¥' + Number(p.value).toFixed(2), fontSize: 11, color: '#606266' }
+    }]
+  })
+  return chart
+}
+
 let savingChartInstance = null
 let billChartInstance = null
+let itemCostChartInstance = null
 
 async function loadSavingTrend() {
   if (!userStore.currentFamily) return
@@ -173,11 +224,22 @@ async function loadBillCompare() {
   } catch(e) {}
 }
 
+async function loadItemDailyCost() {
+  if (!userStore.currentFamily) return
+  try {
+    const res = await dashboardApi.itemDailyCost(userStore.currentFamily.id)
+    const data = res.data || []
+    if (itemCostChartInstance) itemCostChartInstance.dispose()
+    itemCostChartInstance = renderItemCostChart(data)
+  } catch(e) {}
+}
+
 watch(() => userStore.currentFamilyId, () => {
   if (!userStore.isAdmin) {
     loadAddresses()
     loadSavingTrend()
     loadBillCompare()
+    loadItemDailyCost()
   }
 })
 
@@ -186,6 +248,7 @@ onMounted(() => {
     loadAddresses()
     loadSavingTrend()
     loadBillCompare()
+    loadItemDailyCost()
   }
 })
 </script>

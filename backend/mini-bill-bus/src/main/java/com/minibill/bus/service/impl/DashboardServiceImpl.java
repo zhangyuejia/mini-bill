@@ -3,13 +3,20 @@ package com.minibill.bus.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.minibill.bus.entity.BusBill;
 import com.minibill.bus.entity.BusFamilySaving;
+import com.minibill.bus.entity.BusItem;
+import com.minibill.bus.entity.BusItemCost;
 import com.minibill.bus.mapper.BusBillMapper;
 import com.minibill.bus.mapper.BusFamilySavingMapper;
+import com.minibill.bus.mapper.BusItemCostMapper;
+import com.minibill.bus.mapper.BusItemMapper;
 import com.minibill.bus.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +28,8 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final BusFamilySavingMapper savingMapper;
     private final BusBillMapper billMapper;
+    private final BusItemMapper itemMapper;
+    private final BusItemCostMapper itemCostMapper;
 
     @Override
     public List<Map<String, Object>> getSavingTrend(Long familyId) {
@@ -77,6 +86,59 @@ public class DashboardServiceImpl implements DashboardService {
             }
             result.add(row);
         }
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getItemDailyCost(Long familyId) {
+        // 1. 查所有正常物件
+        List<BusItem> items = itemMapper.selectList(new LambdaQueryWrapper<BusItem>()
+                .eq(BusItem::getFamilyId, familyId)
+                .eq(BusItem::getDelFlag, DEL_FLAG_NORMAL));
+
+        // 2. 查所有物件费用记录
+        List<BusItemCost> allCosts = itemCostMapper.selectList(new LambdaQueryWrapper<BusItemCost>()
+                .eq(BusItemCost::getFamilyId, familyId)
+                .eq(BusItemCost::getDelFlag, DEL_FLAG_NORMAL));
+
+        // 按 itemId 分组汇总费用
+        Map<Long, BigDecimal> costSumMap = allCosts.stream()
+                .collect(Collectors.groupingBy(BusItemCost::getItemId,
+                        Collectors.mapping(BusItemCost::getCost,
+                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+
+        LocalDate today = LocalDate.now();
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (BusItem item : items) {
+            if (item.getPurchaseDate() == null || item.getPurchaseAmount() == null) continue;
+
+            // 有停用时间则计算到停用为止，否则到今天
+            LocalDate endDate = item.getDeactivationDate() != null ? item.getDeactivationDate() : today;
+            long daysOwned = ChronoUnit.DAYS.between(item.getPurchaseDate(), endDate);
+            if (daysOwned <= 0) daysOwned = 1;
+
+            BigDecimal maintenanceCost = costSumMap.getOrDefault(item.getId(), BigDecimal.ZERO);
+            BigDecimal totalCost = item.getPurchaseAmount().add(maintenanceCost);
+
+            BigDecimal dailyCost = totalCost.divide(BigDecimal.valueOf(daysOwned), 2, RoundingMode.HALF_UP);
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("name", item.getName());
+            row.put("purchaseAmount", item.getPurchaseAmount());
+            row.put("maintenanceCost", maintenanceCost);
+            row.put("totalCost", totalCost);
+            row.put("daysOwned", daysOwned);
+            row.put("dailyCost", dailyCost);
+            row.put("purchaseDate", item.getPurchaseDate().toString());
+            if (item.getDeactivationDate() != null) {
+                row.put("deactivationDate", item.getDeactivationDate().toString());
+            }
+            result.add(row);
+        }
+
+        // 按日均成本降序
+        result.sort((a, b) -> ((BigDecimal) b.get("dailyCost")).compareTo((BigDecimal) a.get("dailyCost")));
         return result;
     }
 }

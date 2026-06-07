@@ -29,5 +29,7 @@ public class BusItem extends BaseEntity {
 
     private BigDecimal purchaseAmount;
     private LocalDate purchaseDate;
+    /** 停用时间：不为空时表示该物件已停用，成本统计到停用时间为止 */
+    private LocalDate deactivationDate;
     private String remark;
 }
