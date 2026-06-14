@@ -31,4 +31,6 @@ public interface Constants {
     String BIZ_TYPE_ITEM = "item";
     String BIZ_TYPE_ITEM_COST = "item_cost";
     String BIZ_TYPE_MAINTENANCE = "maintenance";
+    String BIZ_TYPE_EDUCATION = "education";
+    String BIZ_TYPE_EDUCATION_ITEM = "education_item";
 }

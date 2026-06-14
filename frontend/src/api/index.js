@@ -314,6 +314,25 @@ export const maintenanceApi = {
   }
 }
 
+// 教育费用接口
+export const educationApi = {
+  page(params) { return request.get('/bus/education/page', { params }) },
+  getById(id) { return request.get(`/bus/education/${id}`) },
+  add(data) { return request.post('/bus/education', data) },
+  update(data) { return request.put('/bus/education', data) },
+  delete(id) { return request.delete(`/bus/education/${id}`) },
+  getAttachments(eduId) { return request.get(`/bus/education/${eduId}/attachments`) },
+  addAttachment(eduId, data) { return request.post(`/bus/education/${eduId}/attachment`, data) },
+  deleteAttachment(id) { return request.delete(`/bus/education/attachment/${id}`) },
+  getItems(eduId) { return request.get(`/bus/education/${eduId}/items`) },
+  addItem(eduId, data) { return request.post(`/bus/education/${eduId}/item`, data) },
+  updateItem(itemId, data) { return request.put(`/bus/education/item/${itemId}`, data) },
+  deleteItem(itemId) { return request.delete(`/bus/education/item/${itemId}`) },
+  getItemAttachments(itemId) { return request.get(`/bus/education/item/${itemId}/attachments`) },
+  addItemAttachment(itemId, data) { return request.post(`/bus/education/item/${itemId}/attachment`, data) },
+  deleteItemAttachment(id) { return request.delete(`/bus/education/item/attachment/${id}`) }
+}
+
 // 文件上传接口
 export const fileApi = {
   upload(file) {
@@ -335,5 +354,8 @@ export const dashboardApi = {
   },
   itemDailyCost(familyId) {
     return request.get('/bus/dashboard/item-daily-cost', { params: { familyId } })
+  },
+  summary(familyId) {
+    return request.get('/bus/dashboard/summary', { params: { familyId } })
   }
 }

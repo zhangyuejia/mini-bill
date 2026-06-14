@@ -131,6 +131,32 @@ CREATE TABLE IF NOT EXISTS bus_maintenance (
     del_flag INTEGER DEFAULT 0
 );
 
+-- 教育费用表
+CREATE TABLE IF NOT EXISTS bus_education (
+    id BIGINT PRIMARY KEY,
+    member_id BIGINT NOT NULL,
+    semester_date DATE NOT NULL,
+    tuition DECIMAL(10,2) DEFAULT 0,
+    meal_fee DECIMAL(10,2) DEFAULT 0,
+    accommodation_fee DECIMAL(10,2) DEFAULT 0,
+    remark TEXT,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    create_by BIGINT DEFAULT 0,
+    update_by BIGINT DEFAULT 0,
+    del_flag INTEGER DEFAULT 0
+);
+
+-- 教育费用明细表
+CREATE TABLE IF NOT EXISTS bus_education_item (
+    id BIGINT PRIMARY KEY,
+    education_id BIGINT NOT NULL,
+    cost_date DATE,
+    item_type VARCHAR(50) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    remark VARCHAR(255)
+);
+
 -- 储蓄项表
 CREATE TABLE IF NOT EXISTS bus_saving_item (
     id BIGINT PRIMARY KEY,
@@ -253,6 +279,22 @@ COMMENT ON COLUMN bus_maintenance.cost_date IS '费用日期';
 COMMENT ON COLUMN bus_maintenance.cost IS '费用金额';
 COMMENT ON COLUMN bus_maintenance.remark IS '备注';
 
+COMMENT ON TABLE bus_education IS '教育费用表';
+COMMENT ON COLUMN bus_education.id IS '主键ID';
+COMMENT ON COLUMN bus_education.member_id IS '家庭成员ID';
+COMMENT ON COLUMN bus_education.semester_date IS '学期日期';
+COMMENT ON COLUMN bus_education.tuition IS '学费';
+COMMENT ON COLUMN bus_education.meal_fee IS '伙食费';
+COMMENT ON COLUMN bus_education.accommodation_fee IS '住宿费';
+COMMENT ON COLUMN bus_education.remark IS '备注';
+
+COMMENT ON TABLE bus_education_item IS '教育费用明细表';
+COMMENT ON COLUMN bus_education_item.id IS '主键ID';
+COMMENT ON COLUMN bus_education_item.education_id IS '教育费用ID';
+COMMENT ON COLUMN bus_education_item.item_type IS '费用类型（字典编码 education_item_type）';
+COMMENT ON COLUMN bus_education_item.amount IS '金额';
+COMMENT ON COLUMN bus_education_item.remark IS '备注';
+
 COMMENT ON TABLE bus_saving_item IS '储蓄项表';
 COMMENT ON COLUMN bus_saving_item.id IS '主键ID';
 COMMENT ON COLUMN bus_saving_item.family_id IS '家庭ID';
@@ -285,6 +327,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_item_family_addr_name ON bus_item(f
 CREATE INDEX IF NOT EXISTS idx_bus_item_cost_family_addr_item ON bus_item_cost(family_id, address_id, item_id);
 CREATE INDEX IF NOT EXISTS idx_bus_maintenance_address ON bus_maintenance(address_id);
 CREATE INDEX IF NOT EXISTS idx_bus_maintenance_date ON bus_maintenance(cost_date);
+CREATE INDEX IF NOT EXISTS idx_bus_education_member ON bus_education(member_id);
+CREATE INDEX IF NOT EXISTS idx_bus_education_item_edu ON bus_education_item(education_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_saving_item_family_member_name ON bus_saving_item(family_id, member_id, name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_saving_record_saving_item_member ON bus_saving_record(saving_id, saving_item_id, member_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_family_saving_family_date ON bus_family_saving(family_id, saving_date);

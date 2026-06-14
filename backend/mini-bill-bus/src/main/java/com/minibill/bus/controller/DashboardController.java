@@ -39,4 +39,10 @@ public class DashboardController {
     public Result<List<Map<String, Object>>> itemDailyCost(@RequestParam Long familyId) {
         return Result.success(dashboardService.getItemDailyCost(familyId));
     }
+
+    @Operation(summary = "获取首页摘要统计")
+    @GetMapping("/summary")
+    public Result<Map<String, Object>> summary(@RequestParam Long familyId) {
+        return Result.success(dashboardService.getSummary(familyId));
+    }
 }

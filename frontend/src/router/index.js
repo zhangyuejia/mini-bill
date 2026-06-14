@@ -82,6 +82,12 @@ const routes = [
         meta: { title: '物件费用', icon: 'Coin' }
       },
       {
+        path: 'education',
+        name: 'Education',
+        component: () => import('@/views/business/bill/EducationManagement.vue'),
+        meta: { title: '教育费用', icon: 'Coin' }
+      },
+      {
         path: 'maintenance',
         name: 'Maintenance',
         component: () => import('@/views/business/bill/MaintenanceManagement.vue'),

@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user', () => {
   const permissions = ref(JSON.parse(localStorage.getItem('permissions') || '[]'))
   const roles = ref(JSON.parse(localStorage.getItem('roles') || '[]'))
   const menus = ref(JSON.parse(localStorage.getItem('menus') || '[]'))
-  const families = ref([])
+  const families = ref(JSON.parse(localStorage.getItem('families') || '[]'))
   const currentFamilyId = ref(localStorage.getItem('currentFamilyId') || '')
 
   const isLoggedIn = computed(() => !!token.value)
@@ -57,6 +57,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await familyApi.getMyFamilies()
       families.value = res.data || []
+      localStorage.setItem('families', JSON.stringify(families.value))
       if (families.value.length > 0 && !currentFamilyId.value) {
         const defaultFamily = families.value.find(f => f.defaultFlag === 1) || families.value[0]
         currentFamilyId.value = String(defaultFamily.id)
@@ -80,7 +81,13 @@ export const useUserStore = defineStore('user', () => {
     menus.value = []
     families.value = []
     currentFamilyId.value = ''
-    localStorage.clear()
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('permissions')
+    localStorage.removeItem('roles')
+    localStorage.removeItem('menus')
+    localStorage.removeItem('families')
+    localStorage.removeItem('currentFamilyId')
   }
 
   return {

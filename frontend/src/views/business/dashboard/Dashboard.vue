@@ -49,6 +49,43 @@
     </template>
 
     <template v-else>
+      <!-- 摘要统计卡片 -->
+      <div class="summary-grid" v-if="summary">
+        <div class="sum-card saving">
+          <div class="sum-icon"><el-icon :size="22"><Wallet /></el-icon></div>
+          <div class="sum-body">
+            <span class="sum-label">家庭储蓄</span>
+            <span class="sum-value">¥{{ (Number(summary.savingTotal) || 0).toLocaleString() }}</span>
+            <span v-if="summary.savingDaysAgoText" class="sum-sub">上次更新：{{ summary.savingDaysAgoText }}前</span>
+            <span v-else class="sum-sub">暂无记录</span>
+          </div>
+        </div>
+        <div class="sum-card expense">
+          <div class="sum-icon"><el-icon :size="22"><Ticket /></el-icon></div>
+          <div class="sum-body">
+            <span class="sum-label">家庭维护费用</span>
+            <span class="sum-value">¥{{ (Number(summary.totalHistory) || 0).toLocaleString() }}</span>
+            <span class="sum-sub">今年：¥{{ (Number(summary.totalThisYear) || 0).toLocaleString() }}，年均：¥{{ (Number(summary.annualAverage) || 0).toLocaleString() }}</span>
+          </div>
+        </div>
+        <div class="sum-card item">
+          <div class="sum-icon"><el-icon :size="22"><Goods /></el-icon></div>
+          <div class="sum-body">
+            <span class="sum-label">家庭物件（{{ summary.itemCount || 0 }}件）</span>
+            <span v-if="summary.mostExpensiveItem" class="sum-sub">最贵日均：{{ summary.mostExpensiveItem.name }} ¥{{ Number(summary.mostExpensiveItem.dailyCost).toFixed(2) }}/天</span>
+            <span v-if="summary.cheapestItem" class="sum-sub">最省日均：{{ summary.cheapestItem.name }} ¥{{ Number(summary.cheapestItem.dailyCost).toFixed(2) }}/天</span>
+          </div>
+        </div>
+        <div class="sum-card this-year">
+          <div class="sum-icon"><el-icon :size="22"><Coin /></el-icon></div>
+          <div class="sum-body">
+            <span class="sum-label">今年总支出</span>
+            <span class="sum-value">¥{{ (Number(summary.totalExpenseThisYear) || 0).toLocaleString() }}</span>
+            <span class="sum-sub">房租水电 ¥{{ (Number(summary.billTotalThisYear) || 0).toLocaleString() }} + 维护 ¥{{ (Number(summary.maintenanceTotalThisYear) || 0).toLocaleString() }} + 物件 ¥{{ (Number(summary.itemCostThisYear) || 0).toLocaleString() }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="chart-row">
         <div class="chart-card">
           <div class="chart-header">
@@ -89,6 +126,7 @@ import { Ticket, Goods, Wallet, MapLocation, User, Avatar, Menu, Collection, Hom
 const userStore = useUserStore()
 const router = useRouter()
 
+const summary = ref(null)
 const savingChartRef = ref(null)
 const billChartRef = ref(null)
 const itemCostChartRef = ref(null)
@@ -177,7 +215,7 @@ function renderItemCostChart(data) {
                 维护费用：¥${Number(d.maintenanceCost).toLocaleString()}<br/>
                 残值回收：¥${Number(d.residualValue || 0).toLocaleString()}<br/>
                 总投入：¥${Number(d.totalCost).toLocaleString()}<br/>
-                持有天数：${d.daysOwned}天<br/>
+                持有天数：${d.daysOwnedText}<br/>
                 日均成本：<strong>¥${Number(d.dailyCost).toFixed(2)}</strong>`
       }
     },
@@ -235,9 +273,18 @@ async function loadItemDailyCost() {
   } catch(e) {}
 }
 
+async function loadSummary() {
+  if (!userStore.currentFamily) return
+  try {
+    const res = await dashboardApi.summary(userStore.currentFamily.id)
+    summary.value = res.data || null
+  } catch(e) {}
+}
+
 watch(() => userStore.currentFamilyId, () => {
   if (!userStore.isAdmin) {
     loadAddresses()
+    loadSummary()
     loadSavingTrend()
     loadBillCompare()
     loadItemDailyCost()
@@ -247,6 +294,7 @@ watch(() => userStore.currentFamilyId, () => {
 onMounted(() => {
   if (!userStore.isAdmin && userStore.currentFamily) {
     loadAddresses()
+    loadSummary()
     loadSavingTrend()
     loadBillCompare()
     loadItemDailyCost()
@@ -298,6 +346,20 @@ onMounted(() => {
   span { font-weight: 500; }
 }
 
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.sum-card { background: #fff; border-radius: 14px; padding: 20px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.3s;
+  &:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .sum-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+  .sum-body { display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    .sum-label { font-size: 13px; color: #909399; white-space: nowrap; }
+    .sum-value { font-size: 20px; font-weight: 700; color: #303133; }
+    .sum-sub { font-size: 11px; color: #b0b3bb; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+  &.saving .sum-icon { background: linear-gradient(135deg, #67c23a, #529b2e); }
+  &.expense .sum-icon { background: linear-gradient(135deg, #e6a23c, #d4880f); }
+  &.item .sum-icon { background: linear-gradient(135deg, #409eff, #337ecc); }
+  &.this-year .sum-icon { background: linear-gradient(135deg, #f56c6c, #d94343); }
+}
 .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .chart-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;

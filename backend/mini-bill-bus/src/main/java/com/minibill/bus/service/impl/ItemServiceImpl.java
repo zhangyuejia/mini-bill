@@ -87,11 +87,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteItem(Long id) {
-        BusItem item = itemMapper.selectById(id);
-        if (item != null) {
-            item.setDelFlag(DEL_FLAG_DELETED);
-            itemMapper.updateById(item);
+        Long costCount = costMapper.selectCount(new LambdaQueryWrapper<BusItemCost>().eq(BusItemCost::getItemId, id));
+        if (costCount != null && costCount > 0L) {
+            throw new BusinessException("当前物品id存在费用" + id);
         }
+        itemMapper.deleteById(id);
     }
 
     @Override
@@ -152,11 +152,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteItemCost(Long id) {
-        BusItemCost cost = costMapper.selectById(id);
-        if (cost != null) {
-            cost.setDelFlag(DEL_FLAG_DELETED);
-            costMapper.updateById(cost);
-        }
+        costMapper.deleteById(id);
     }
 
     @Override

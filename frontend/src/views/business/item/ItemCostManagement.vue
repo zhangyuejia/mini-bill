@@ -20,7 +20,7 @@
           <el-table-column prop="mileage" label="里程" width="100" align="right" />
           <el-table-column prop="cost" label="费用" width="120" align="right"><template #default="{ row }"><strong>{{ row.cost }}</strong></template></el-table-column>
           <el-table-column prop="remark" label="备注" min-width="120" show-overflow-tooltip />
-          <el-table-column label="附件" width="70"><template #default="{ row }"><el-tag v-if="row._attachCount" size="small" type="info">{{ row._attachCount }}张</el-tag></template></el-table-column>
+          <el-table-column label="附件" width="90"><template #default="{ row }"><template v-if="row._attachCount"><el-image :src="row.attachments[0].fileUrl" :preview-src-list="row.attachments.map(a=>a.fileUrl)" fit="cover" style="width:32px;height:32px;border-radius:4px;cursor:pointer" preview-teleported /><span style="font-size:11px;color:#909399;margin-left:4px;">{{ row._attachCount }}张</span></template></template></el-table-column>
           <el-table-column label="操作" width="140" fixed="right"><template #default="{ row }"><el-button link type="primary" size="small" @click="showDialog(row)">编辑</el-button><el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button></template></el-table-column>
         </el-table>
         <div class="pagination-wrapper">
