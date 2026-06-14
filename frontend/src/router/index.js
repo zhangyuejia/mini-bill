@@ -79,7 +79,7 @@ const routes = [
         path: 'item-cost',
         name: 'ItemCost',
         component: () => import('@/views/business/item/ItemCostManagement.vue'),
-        meta: { title: '物件费用', icon: 'Coin' }
+        meta: { title: '物品流水', icon: 'Coin' }
       },
       {
         path: 'education',

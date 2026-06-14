@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <h2 class="page-title">物件费用管理</h2>
+    <h2 class="page-title">物品流水</h2>
 
     <div v-if="userStore.currentFamily">
       <div class="query-bar">

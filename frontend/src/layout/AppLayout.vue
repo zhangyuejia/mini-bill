@@ -161,7 +161,7 @@ const menuDefinition = [
   ]},
   { name: '账单管理', icon: 'Ticket', children: [
     { path: 'bill', name: '房租水电', icon: 'Ticket' },
-    { path: 'item-cost', name: '物件费用', icon: 'Coin' },
+    { path: 'item-cost', name: '物品流水', icon: 'Coin' },
     { path: 'maintenance', name: '维护费用', icon: 'Tools' },
     { path: 'education', name: '教育费用', icon: 'Coin' }
   ]},
