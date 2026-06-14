@@ -16,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.util.StringUtils;
 
 import static com.minibill.common.constant.Constants.*;
@@ -90,7 +93,21 @@ public class SavingServiceImpl implements SavingService {
                 .le(StringUtils.hasText(savingDateEnd), BusFamilySaving::getSavingDate, StringUtils.hasText(savingDateEnd) ? LocalDate.parse(savingDateEnd) : null)
                 .eq(BusFamilySaving::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusFamilySaving::getSavingDate);
-        return familySavingMapper.selectPage(page, wrapper);
+        Page<BusFamilySaving> result = familySavingMapper.selectPage(page, wrapper);
+
+        // 批量查询 records，消除 N+1
+        List<BusFamilySaving> records = result.getRecords();
+        if (!records.isEmpty()) {
+            List<Long> savingIds = records.stream().map(BusFamilySaving::getId).collect(Collectors.toList());
+            List<BusSavingRecord> allRecords = savingRecordMapper.selectList(
+                    new LambdaQueryWrapper<BusSavingRecord>()
+                            .in(BusSavingRecord::getSavingId, savingIds));
+            Map<Long, List<BusSavingRecord>> recordMap = allRecords.stream()
+                    .collect(Collectors.groupingBy(BusSavingRecord::getSavingId));
+            records.forEach(saving -> saving.setRecords(recordMap.getOrDefault(saving.getId(), new ArrayList<>())));
+        }
+
+        return result;
     }
 
     @Override

@@ -202,4 +202,72 @@ html, body, #app {
 .el-input__wrapper.is-focus {
   box-shadow: 0 0 0 1px var(--primary) inset !important;
 }
+
+/* ========== Mobile Responsive ========== */
+
+/* Table horizontal scroll on mobile */
+@media (max-width: 768px) {
+  .el-table {
+    width: 100%;
+  }
+  .el-table__body-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Dialog full-screen on mobile */
+  .el-dialog {
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    margin: 16px !important;
+    max-height: calc(100vh - 32px) !important;
+    display: flex;
+    flex-direction: column;
+  }
+  .el-dialog__body {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 60vh;
+  }
+  .el-dialog__header {
+    flex-shrink: 0;
+  }
+  .el-dialog__footer {
+    flex-shrink: 0;
+  }
+
+  /* Fix form row wrapping on mobile */
+  .el-row {
+    flex-wrap: wrap !important;
+  }
+  .el-col {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Page container padding */
+  .page-container {
+    padding: 12px !important;
+  }
+
+  /* Ensure query bar wraps properly */
+  .query-bar {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .query-bar .el-select,
+  .query-bar .el-date-editor,
+  .query-bar .el-button {
+    width: 100% !important;
+  }
+
+  /* Form items full width */
+  .el-form-item {
+    flex-wrap: wrap;
+  }
+  .el-form-item__content {
+    flex-wrap: wrap;
+  }
+}
 </style>

@@ -10,6 +10,8 @@ public final class DictCode {
 
     /** 物件类型 */
     public static final String ITEM_TYPE = "item_type";
+    /** 维护类型 */
+    public static final String MAINTENANCE_TYPE = "maintenance_type";
     /** 省市区 */
     public static final String REGION = "region";
 }

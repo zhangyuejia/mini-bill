@@ -175,6 +175,7 @@ function renderItemCostChart(data) {
         return `<strong>${d.name}</strong><br/>
                 购买金额：¥${Number(d.purchaseAmount).toLocaleString()}<br/>
                 维护费用：¥${Number(d.maintenanceCost).toLocaleString()}<br/>
+                残值回收：¥${Number(d.residualValue || 0).toLocaleString()}<br/>
                 总投入：¥${Number(d.totalCost).toLocaleString()}<br/>
                 持有天数：${d.daysOwned}天<br/>
                 日均成本：<strong>¥${Number(d.dailyCost).toFixed(2)}</strong>`

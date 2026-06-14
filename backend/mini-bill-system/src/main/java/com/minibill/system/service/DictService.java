@@ -1,6 +1,7 @@
 package com.minibill.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.minibill.common.service.DictLabelProvider;
 import com.minibill.system.entity.SysDictData;
 import com.minibill.system.entity.SysDictType;
 
@@ -9,7 +10,7 @@ import java.util.List;
 /**
  * 字典管理服务接口
  */
-public interface DictService {
+public interface DictService extends DictLabelProvider {
 
     // ===== 字典类型 =====
 

@@ -25,4 +25,10 @@ public interface Constants {
     String CACHE_KEY_USER = REDIS_KEY_PREFIX + "user:";
     String CACHE_KEY_MENU = REDIS_KEY_PREFIX + "menu:";
     String CACHE_KEY_DICT = REDIS_KEY_PREFIX + "dict:";
+
+    /** 附件业务类型 */
+    String BIZ_TYPE_BILL = "bill";
+    String BIZ_TYPE_ITEM = "item";
+    String BIZ_TYPE_ITEM_COST = "item_cost";
+    String BIZ_TYPE_MAINTENANCE = "maintenance";
 }

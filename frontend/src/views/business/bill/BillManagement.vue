@@ -7,7 +7,7 @@
         <el-select v-model="query.addressId" placeholder="选择住址" clearable style="width:160px"><el-option v-for="a in addresses" :key="a.id" :label="a.name" :value="a.id" /></el-select>
         <el-date-picker v-model="query.periodStart" type="month" placeholder="账期起" value-format="YYYYMM" clearable style="width:150px" />
         <el-date-picker v-model="query.periodEnd" type="month" placeholder="账期止" value-format="YYYYMM" clearable style="width:150px" />
-        <el-button type="primary" @click="fetchData">查询</el-button>
+        <el-button type="primary" @click="handleQuery">查询</el-button>
         <el-button type="success" @click="showDialog(null)">新增账单</el-button>
       </div>
 
@@ -29,7 +29,7 @@
           </el-table-column>
         </el-table>
         <div class="pagination-wrapper">
-          <el-pagination v-model:currentPage="pageNum" v-model:pageSize="pageSize" :total="total" layout="total, prev, pager, next" @current-change="fetchData" />
+          <el-pagination v-model:currentPage="pageNum" v-model:pageSize="pageSize" :total="total" :page-sizes="[10, 20, 50]" layout="total, sizes, prev, pager, next" :hide-on-single-page="false" @current-change="fetchData" @size-change="fetchData" />
         </div>
       </div>
     </div>
@@ -55,13 +55,7 @@
         <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
         <el-divider content-position="left" class="section-divider">附件（水电单图片）</el-divider>
         <el-form-item label="上传图片">
-          <div class="upload-area">
-            <el-upload :action="uploadUrl" :headers="uploadHeaders" :show-file-list="false" :on-success="handleUploadSuccess" :before-upload="beforeUpload" accept="image/*"><el-button type="primary" size="small">选择图片</el-button><template #tip><span style="color:#909399;font-size:12px;margin-left:8px;">最多10张</span></template></el-upload>
-            <div v-if="attachmentList.length > 0" class="image-list">
-              <div v-for="(att, idx) in attachmentList" :key="att.id || idx" class="image-item"><el-image :src="att.fileUrl" fit="cover" style="width:90px;height:90px;border-radius:6px;cursor:pointer" :preview-src-list="attachmentList.map(a => a.fileUrl)" preview-teleported /><el-button class="image-remove" circle size="small" type="danger" @click="removeAttachment(idx)"><el-icon><Close /></el-icon></el-button></div>
-            </div>
-            <div v-else style="color:#909399;font-size:13px;padding:8px 0;">暂未上传图片</div>
-          </div>
+          <AttachmentUpload prefix="bill" :list="attachmentList" @remove="removeAttachment" />
         </el-form-item>
       </el-form>
       <template #footer><el-button @click="showDlg = false">取消</el-button><el-button type="primary" @click="save" :loading="saving">保存</el-button></template>
@@ -74,13 +68,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { billApi, addressApi } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Close } from '@element-plus/icons-vue'
+import AttachmentUpload from '@/components/AttachmentUpload.vue'
 
 const userStore = useUserStore()
 const loading = ref(false); const list = ref([]); const total = ref(0)
-const pageNum = ref(1); const pageSize = ref(15); const addresses = ref([]); const query = ref({ addressId: '', periodStart: '', periodEnd: '' })
-const showDlg = ref(false); const isEdit = ref(false); const saving = ref(false); const form = ref(createEmptyForm()); const formRef = ref(null)
-const uploadUrl = '/bus/api/file/upload?prefix=bill'; const uploadHeaders = { Authorization: 'Bearer ' + localStorage.getItem('token') }; const attachmentList = ref([])
+const pageNum = ref(1); const pageSize = ref(10); const addresses = ref([]); const query = ref({ addressId: '', periodStart: '', periodEnd: '' })
+const showDlg = ref(false); const isEdit = ref(false); const saving = ref(false); const form = ref(createEmptyForm()); const formRef = ref(null); const attachmentList = ref([])
 
 function createEmptyForm() { return { familyId: userStore.currentFamily?.id, addressId: '', period: '', rent: null, managementFee: null, otherFee: null, totalAmount: 0, remark: '', waterPrevReading: null, waterCurrReading: null, waterUnitPrice: null, waterAmount: null, electricPrevReading: null, electricCurrReading: null, electricUnitPrice: null, electricAmount: null, roundingAmount: null } }
 const calculatedWater = computed(() => { const { waterCurrReading, waterPrevReading, waterUnitPrice } = form.value; return (waterCurrReading && waterPrevReading && waterUnitPrice) ? ((waterCurrReading - waterPrevReading) * waterUnitPrice).toFixed(2) : '-' })
@@ -121,10 +114,11 @@ async function fetchData() {
     if (query.value.periodStart) params.periodStart = Number(query.value.periodStart)
     if (query.value.periodEnd) params.periodEnd = Number(query.value.periodEnd)
     const res = await billApi.page(params); const d = res.data
-    list.value = (d.records || []).map(r => ({ ...r, _attachCount: 0 })); total.value = Number(d.total) || 0
-    list.value.forEach(async (row) => { try { const attRes = await billApi.getAttachments(row.id); row._attachCount = (attRes.data || []).length } catch (e) { } })
+    list.value = (d.records || []).map(r => ({ ...r, _attachCount: (r.attachments || []).length })); total.value = Number(d.total) || 0; pageNum.value = Number(d.current) || 1; pageSize.value = Number(d.size) || 10
   } finally { loading.value = false }
 }
+
+function handleQuery() { pageNum.value = 1; fetchData() }
 
 function showDialog(row) {
   isEdit.value = !!row; form.value = row ? { ...row, period: row.period ? String(row.period) : "" } : { ...createEmptyForm(), familyId: userStore.currentFamily?.id }; attachmentList.value = []
@@ -152,7 +146,7 @@ function showDialog(row) {
       form.value.remark = form.value.remark.replace(/管理费\d+(\.\d+)?[，,、\s]*/, "").trim()
     }
   }
-  if (row) { billApi.getAttachments(row.id).then(res => { attachmentList.value = (res.data || []).map(a => ({ ...a, _isNew: false })) }).catch(function() {}) }
+  if (row) { attachmentList.value = (row.attachments || []).map(a => ({ ...a, _isNew: false })) }
   // 触发水电费自动计算
   calcElectric(); calcWater()
   showDlg.value = true
@@ -166,8 +160,6 @@ async function save() {
 
 async function handleDelete(row) { try { await ElMessageBox.confirm('确认删除该账单？','提示'); await billApi.delete(row.id); ElMessage.success('删除成功'); fetchData() } catch(e) { if(e!=='cancel') throw e } }
 
-function beforeUpload(file) { if (!file.type.startsWith('image/')) { ElMessage.warning('只能上传图片'); return false } if (file.size > 10*1024*1024) { ElMessage.warning('图片不能超过10MB'); return false } if (attachmentList.value.length >= 10) { ElMessage.warning('最多上传10张'); return false } return true }
-function handleUploadSuccess(res, file) { if (res.code !== 200) { ElMessage.error(res.msg||'上传失败'); return }; attachmentList.value.push({ id: null, fileName: file.name, fileUrl: res.data, fileSize: file.size, _isNew: true }) }
 function removeAttachment(idx) { const att = attachmentList.value[idx]; if (att && !att._isNew && att.id) { billApi.deleteAttachment(att.id).catch(()=>{}) }; attachmentList.value.splice(idx, 1) }
 
 watch(() => userStore.currentFamilyId, () => { query.value = { addressId: '', periodStart: '', periodEnd: '' }; pageNum.value = 1; loadAddresses(); fetchData() })
@@ -193,9 +185,6 @@ watch([() => form.value.waterPrevReading, () => form.value.waterCurrReading, () 
 .pagination-wrapper { margin-top: 20px; display: flex; justify-content: flex-end; position: relative; z-index: 1; }
 .calc-hint { margin-left: 12px; color: #909399; font-size: 12px; }
 .empty-tip { padding: 80px 0; display: flex; justify-content: center; }
-.image-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.image-item { position: relative; }
-.image-remove { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; }
 :deep(.section-divider .el-divider__text) { font-weight: 600; color: #409eff; font-size: 14px; }
 .bill-dialog { :deep(.el-dialog__body) { max-height: 70vh; overflow-y: auto; } }
 :deep(.el-table__footer-wrapper .cell) { font-weight: 700; color: #f56c6c; }

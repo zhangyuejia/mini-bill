@@ -3,9 +3,9 @@ package com.minibill.bus.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.minibill.common.exception.BusinessException;
+import com.minibill.bus.entity.BusAttachment;
 import com.minibill.bus.entity.BusBill;
-import com.minibill.bus.entity.BusBillAttachment;
-import com.minibill.bus.mapper.BusBillAttachmentMapper;
+import com.minibill.bus.mapper.BusAttachmentMapper;
 import com.minibill.bus.mapper.BusBillMapper;
 import com.minibill.bus.service.BillService;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.minibill.common.constant.Constants.*;
 
@@ -27,7 +28,7 @@ import static com.minibill.common.constant.Constants.*;
 public class BillServiceImpl implements BillService {
 
     private final BusBillMapper billMapper;
-    private final BusBillAttachmentMapper attachmentMapper;
+    private final BusAttachmentMapper attachmentMapper;
 
     @Override
     public Page<BusBill> pageBill(Integer pageNum, Integer pageSize, Long familyId, Long addressId, Integer periodStart, Integer periodEnd) {
@@ -39,7 +40,22 @@ public class BillServiceImpl implements BillService {
                 .le(periodEnd != null, BusBill::getPeriod, periodEnd)
                 .eq(BusBill::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusBill::getPeriod);
-        return billMapper.selectPage(page, wrapper);
+        Page<BusBill> result = billMapper.selectPage(page, wrapper);
+
+        // 批量查询附件
+        List<BusBill> records = result.getRecords();
+        if (!records.isEmpty()) {
+            List<Long> billIds = records.stream().map(BusBill::getId).collect(Collectors.toList());
+            List<BusAttachment> allAttachments = attachmentMapper.selectList(
+                    new LambdaQueryWrapper<BusAttachment>()
+                            .eq(BusAttachment::getBizType, BIZ_TYPE_BILL)
+                            .in(BusAttachment::getBizId, billIds));
+            Map<Long, List<BusAttachment>> attachmentMap = allAttachments.stream()
+                    .collect(Collectors.groupingBy(BusAttachment::getBizId));
+            records.forEach(bill -> bill.setAttachments(attachmentMap.getOrDefault(bill.getId(), new ArrayList<>())));
+        }
+
+        return result;
     }
 
     @Override
@@ -88,14 +104,15 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public List<BusBillAttachment> getAttachments(Long billId) {
-        return attachmentMapper.selectList(new LambdaQueryWrapper<BusBillAttachment>()
-                .eq(BusBillAttachment::getBillId, billId));
+    public List<BusAttachment> getAttachments(Long billId) {
+        return attachmentMapper.selectList(new LambdaQueryWrapper<BusAttachment>()
+                .eq(BusAttachment::getBizType, BIZ_TYPE_BILL)
+                .eq(BusAttachment::getBizId, billId));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void addAttachment(BusBillAttachment attachment) {
+    public void addAttachment(BusAttachment attachment) {
         attachmentMapper.insert(attachment);
     }
 
@@ -103,33 +120,6 @@ public class BillServiceImpl implements BillService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteAttachment(Long id) {
         attachmentMapper.deleteById(id);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int migrateManagementFee() {
-        List<BusBill> all = billMapper.selectList(new LambdaQueryWrapper<BusBill>()
-                .eq(BusBill::getDelFlag, DEL_FLAG_NORMAL));
-        Pattern mgmtPattern = Pattern.compile("管理费(\\d+(\\.\\d+)?)");
-        int count = 0;
-        for (BusBill bill : all) {
-            String remark = bill.getRemark();
-            if (remark != null && remark.contains("管理费")) {
-                Matcher matcher = mgmtPattern.matcher(remark);
-                if (matcher.find()) {
-                    bill.setManagementFee(new BigDecimal(matcher.group(1)));
-                    String newRemark = matcher.replaceFirst("").trim();
-                    newRemark = newRemark.replaceAll("^[，,、\\s]+", "");
-                    newRemark = newRemark.replaceAll("[，,、]+$", "").trim();
-                    bill.setRemark(newRemark);
-                }
-            }
-            // Apply full new calculation logic
-            calculateAndSetTotal(bill);
-            billMapper.updateById(bill);
-            count++;
-        }
-        return count;
     }
 
     private void calculateAndSetTotal(BusBill bill) {

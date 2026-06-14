@@ -1,21 +1,25 @@
 package com.minibill.bus.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
 
 /**
- * 账单附件
+ * 通用附件
  */
 @Data
-@TableName("bus_bill_attachment")
-public class BusBillAttachment implements Serializable {
+@TableName("bus_attachment")
+public class BusAttachment implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
-    private Long billId;
+    private String bizType;
+    private Long bizId;
     private String fileName;
     private String fileUrl;
     private Long fileSize;

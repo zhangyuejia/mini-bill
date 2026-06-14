@@ -82,6 +82,12 @@ const routes = [
         meta: { title: '物件费用', icon: 'Coin' }
       },
       {
+        path: 'maintenance',
+        name: 'Maintenance',
+        component: () => import('@/views/business/bill/MaintenanceManagement.vue'),
+        meta: { title: '维护费用', icon: 'Tools' }
+      },
+      {
         path: 'saving-item',
         name: 'SavingItem',
         component: () => import('@/views/business/saving/SavingItemManagement.vue'),

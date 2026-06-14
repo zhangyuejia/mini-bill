@@ -49,4 +49,10 @@ public interface SystemFeignClient {
      */
     @GetMapping("/user/byEmail")
     UserDTO getUserByEmail(@RequestParam("email") String email);
+
+    /**
+     * 根据字典编码和键值获取中文标签
+     */
+    @GetMapping("/dict/label")
+    String getDictLabel(@RequestParam("dictCode") String dictCode, @RequestParam("value") String value);
 }

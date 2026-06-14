@@ -286,6 +286,34 @@ export const savingApi = {
   }
 }
 
+// 维护费用接口
+export const maintenanceApi = {
+  page(params) {
+    return request.get('/bus/maintenance/page', { params })
+  },
+  getById(id) {
+    return request.get(`/bus/maintenance/${id}`)
+  },
+  add(data) {
+    return request.post('/bus/maintenance', data)
+  },
+  update(data) {
+    return request.put('/bus/maintenance', data)
+  },
+  delete(id) {
+    return request.delete(`/bus/maintenance/${id}`)
+  },
+  getAttachments(maintenanceId) {
+    return request.get(`/bus/maintenance/${maintenanceId}/attachments`)
+  },
+  addAttachment(maintenanceId, data) {
+    return request.post(`/bus/maintenance/${maintenanceId}/attachment`, data)
+  },
+  deleteAttachment(id) {
+    return request.delete(`/bus/maintenance/attachment/${id}`)
+  }
+}
+
 // 文件上传接口
 export const fileApi = {
   upload(file) {

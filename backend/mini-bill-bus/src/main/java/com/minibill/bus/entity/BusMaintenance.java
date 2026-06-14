@@ -13,28 +13,20 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 物件
+ * 维护费用
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("bus_item")
-public class BusItem extends BaseEntity {
+@TableName("bus_maintenance")
+public class BusMaintenance extends BaseEntity {
 
-    private Long familyId;
     private Long addressId;
-    private String name;
-    @DictText(dictCode = DictCode.ITEM_TYPE)
-    private String type;         // 类型（字典编码 item_type）
-
+    @DictText(dictCode = DictCode.MAINTENANCE_TYPE)
+    private String type;
     /** 字典文本：type 对应的中文（非数据库字段，由 DictAspect 自动填充） */
     private transient String typeText;
-
-    private BigDecimal purchaseAmount;
-    private LocalDate purchaseDate;
-    /** 停用时间：不为空时表示该物件已停用，成本统计到停用时间为止 */
-    private LocalDate deactivationDate;
-    /** 残值：物件报废或二手回收后拿回的钱，计算总投入时需扣除 */
-    private BigDecimal residualValue;
+    private LocalDate costDate;
+    private BigDecimal cost;
     private String remark;
 
     @TableField(exist = false)

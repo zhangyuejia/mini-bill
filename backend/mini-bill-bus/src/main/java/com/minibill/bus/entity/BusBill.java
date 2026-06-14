@@ -1,11 +1,13 @@
 package com.minibill.bus.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.minibill.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 房租水电账单
@@ -47,4 +49,7 @@ public class BusBill extends BaseEntity {
     private BigDecimal totalAmount;
 
     private String remark;
+
+    @TableField(exist = false)
+    private List<BusAttachment> attachments;
 }

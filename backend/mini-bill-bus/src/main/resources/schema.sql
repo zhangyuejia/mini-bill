@@ -72,10 +72,11 @@ CREATE TABLE IF NOT EXISTS bus_bill (
     del_flag INTEGER DEFAULT 0
 );
 
--- 账单附件表
-CREATE TABLE IF NOT EXISTS bus_bill_attachment (
+-- 通用附件表
+CREATE TABLE IF NOT EXISTS bus_attachment (
     id BIGINT PRIMARY KEY,
-    bill_id BIGINT NOT NULL,
+    biz_type VARCHAR(20) NOT NULL,
+    biz_id BIGINT NOT NULL,
     file_name VARCHAR(255),
     file_url VARCHAR(500),
     file_size BIGINT
@@ -91,6 +92,7 @@ CREATE TABLE IF NOT EXISTS bus_item (
     purchase_amount DECIMAL(10,2),
     purchase_date DATE,
     deactivation_date DATE,
+    residual_value DECIMAL(10,2),
     remark TEXT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -99,20 +101,9 @@ CREATE TABLE IF NOT EXISTS bus_item (
     del_flag INTEGER DEFAULT 0
 );
 
--- 物件附件表
-CREATE TABLE IF NOT EXISTS bus_item_attachment (
-    id BIGINT PRIMARY KEY,
-    item_id BIGINT NOT NULL,
-    file_name VARCHAR(255),
-    file_url VARCHAR(500),
-    file_size BIGINT
-);
-
 -- 物件费用表
 CREATE TABLE IF NOT EXISTS bus_item_cost (
     id BIGINT PRIMARY KEY,
-    family_id BIGINT NOT NULL,
-    address_id BIGINT NOT NULL,
     item_id BIGINT NOT NULL,
     cost_date DATE,
     mileage DECIMAL(10,2),
@@ -125,13 +116,19 @@ CREATE TABLE IF NOT EXISTS bus_item_cost (
     del_flag INTEGER DEFAULT 0
 );
 
--- 物件费用附件表
-CREATE TABLE IF NOT EXISTS bus_item_cost_attachment (
+-- 维护费用表
+CREATE TABLE IF NOT EXISTS bus_maintenance (
     id BIGINT PRIMARY KEY,
-    cost_id BIGINT NOT NULL,
-    file_name VARCHAR(255),
-    file_url VARCHAR(500),
-    file_size BIGINT
+    address_id BIGINT NOT NULL,
+    type VARCHAR(50),
+    cost_date DATE NOT NULL,
+    cost DECIMAL(10,2) NOT NULL,
+    remark TEXT,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    create_by BIGINT DEFAULT 0,
+    update_by BIGINT DEFAULT 0,
+    del_flag INTEGER DEFAULT 0
 );
 
 -- 储蓄项表
@@ -220,12 +217,13 @@ COMMENT ON COLUMN bus_bill.other_fee IS '其他费用';
 COMMENT ON COLUMN bus_bill.total_amount IS '合计金额';
 COMMENT ON COLUMN bus_bill.remark IS '备注';
 
-COMMENT ON TABLE bus_bill_attachment IS '账单附件表';
-COMMENT ON COLUMN bus_bill_attachment.id IS '主键ID';
-COMMENT ON COLUMN bus_bill_attachment.bill_id IS '账单ID';
-COMMENT ON COLUMN bus_bill_attachment.file_name IS '文件名';
-COMMENT ON COLUMN bus_bill_attachment.file_url IS '文件URL';
-COMMENT ON COLUMN bus_bill_attachment.file_size IS '文件大小（字节）';
+COMMENT ON TABLE bus_attachment IS '通用附件表';
+COMMENT ON COLUMN bus_attachment.id IS '主键ID';
+COMMENT ON COLUMN bus_attachment.biz_type IS '业务类型：bill-账单 item-物件 item_cost-物件费用';
+COMMENT ON COLUMN bus_attachment.biz_id IS '业务ID';
+COMMENT ON COLUMN bus_attachment.file_name IS '文件名';
+COMMENT ON COLUMN bus_attachment.file_url IS '文件URL';
+COMMENT ON COLUMN bus_attachment.file_size IS '文件大小（字节）';
 
 COMMENT ON TABLE bus_item IS '物件表';
 COMMENT ON COLUMN bus_item.id IS '主键ID';
@@ -236,31 +234,24 @@ COMMENT ON COLUMN bus_item.type IS '物件类型（字典编码 item_type）';
 COMMENT ON COLUMN bus_item.purchase_amount IS '购买金额';
 COMMENT ON COLUMN bus_item.deactivation_date IS '停用时间';
 COMMENT ON COLUMN bus_item.purchase_date IS '购买日期';
+COMMENT ON COLUMN bus_item.residual_value IS '残值（报废/二手回收金额）';
 COMMENT ON COLUMN bus_item.remark IS '备注';
-
-COMMENT ON TABLE bus_item_attachment IS '物件附件表';
-COMMENT ON COLUMN bus_item_attachment.id IS '主键ID';
-COMMENT ON COLUMN bus_item_attachment.item_id IS '物件ID';
-COMMENT ON COLUMN bus_item_attachment.file_name IS '文件名';
-COMMENT ON COLUMN bus_item_attachment.file_url IS '文件URL';
-COMMENT ON COLUMN bus_item_attachment.file_size IS '文件大小（字节）';
 
 COMMENT ON TABLE bus_item_cost IS '物件费用表';
 COMMENT ON COLUMN bus_item_cost.id IS '主键ID';
-COMMENT ON COLUMN bus_item_cost.family_id IS '家庭ID';
-COMMENT ON COLUMN bus_item_cost.address_id IS '住址ID';
 COMMENT ON COLUMN bus_item_cost.item_id IS '物件ID';
 COMMENT ON COLUMN bus_item_cost.cost_date IS '费用日期';
 COMMENT ON COLUMN bus_item_cost.mileage IS '里程（交通工具时填写）';
 COMMENT ON COLUMN bus_item_cost.cost IS '费用金额';
 COMMENT ON COLUMN bus_item_cost.remark IS '备注';
 
-COMMENT ON TABLE bus_item_cost_attachment IS '物件费用附件表';
-COMMENT ON COLUMN bus_item_cost_attachment.id IS '主键ID';
-COMMENT ON COLUMN bus_item_cost_attachment.cost_id IS '物件费用ID';
-COMMENT ON COLUMN bus_item_cost_attachment.file_name IS '文件名';
-COMMENT ON COLUMN bus_item_cost_attachment.file_url IS '文件URL';
-COMMENT ON COLUMN bus_item_cost_attachment.file_size IS '文件大小（字节）';
+COMMENT ON TABLE bus_maintenance IS '维护费用表';
+COMMENT ON COLUMN bus_maintenance.id IS '主键ID';
+COMMENT ON COLUMN bus_maintenance.address_id IS '住址ID';
+COMMENT ON COLUMN bus_maintenance.type IS '维护类型（字典编码 maintenance_type）';
+COMMENT ON COLUMN bus_maintenance.cost_date IS '费用日期';
+COMMENT ON COLUMN bus_maintenance.cost IS '费用金额';
+COMMENT ON COLUMN bus_maintenance.remark IS '备注';
 
 COMMENT ON TABLE bus_saving_item IS '储蓄项表';
 COMMENT ON COLUMN bus_saving_item.id IS '主键ID';
@@ -289,11 +280,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_family_owner_name ON bus_family(own
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_family_member ON bus_family_member(family_id, user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_address_family_name ON bus_address(family_id, name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_bill_family_addr_period ON bus_bill(family_id, address_id, period);
-CREATE INDEX IF NOT EXISTS idx_bus_bill_attachment_bill_id ON bus_bill_attachment(bill_id);
+CREATE INDEX IF NOT EXISTS idx_bus_attachment_biz ON bus_attachment(biz_type, biz_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_item_family_addr_name ON bus_item(family_id, address_id, name);
-CREATE INDEX IF NOT EXISTS idx_bus_item_attachment_item_id ON bus_item_attachment(item_id);
 CREATE INDEX IF NOT EXISTS idx_bus_item_cost_family_addr_item ON bus_item_cost(family_id, address_id, item_id);
-CREATE INDEX IF NOT EXISTS idx_bus_item_cost_att_cost_id ON bus_item_cost_attachment(cost_id);
+CREATE INDEX IF NOT EXISTS idx_bus_maintenance_address ON bus_maintenance(address_id);
+CREATE INDEX IF NOT EXISTS idx_bus_maintenance_date ON bus_maintenance(cost_date);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_saving_item_family_member_name ON bus_saving_item(family_id, member_id, name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_saving_record_saving_item_member ON bus_saving_record(saving_id, saving_item_id, member_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_uq_bus_family_saving_family_date ON bus_family_saving(family_id, saving_date);
@@ -306,5 +297,5 @@ COMMENT ON COLUMN bus_address.default_management_fee IS '默认管理费';
 
 ALTER TABLE bus_bill ADD COLUMN IF NOT EXISTS management_fee DECIMAL(10,2);
 COMMENT ON COLUMN bus_bill.management_fee IS '管理费';
-nALTER TABLE bus_bill ADD COLUMN IF NOT EXISTS rounding_amount DECIMAL(10,2);
+ALTER TABLE bus_bill ADD COLUMN IF NOT EXISTS rounding_amount DECIMAL(10,2);
 COMMENT ON COLUMN bus_bill.rounding_amount IS '抹零金额';

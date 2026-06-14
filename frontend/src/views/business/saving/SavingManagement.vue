@@ -71,7 +71,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, User } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
-const loading = ref(false); const list = ref([]); const total = ref(0); const pageNum = ref(1); const pageSize = ref(15); const query = ref({ savingDateStart: '', savingDateEnd: '' })
+const loading = ref(false); const list = ref([]); const total = ref(0); const pageNum = ref(1); const pageSize = ref(10); const query = ref({ savingDateStart: '', savingDateEnd: '' })
 const savingItems = ref([]); const memberNames = ref({})
 
 // 创建/编辑
@@ -90,7 +90,7 @@ function getSavingItemDisplayName(savingItemId) { const item = savingItems.value
 
 async function fetchData() {
   if (!userStore.currentFamily) return; loading.value = true
-  try { const params = { pageNum: pageNum.value, pageSize: pageSize.value, familyId: userStore.currentFamily.id }; if (query.value.savingDateStart) params.savingDateStart = query.value.savingDateStart; if (query.value.savingDateEnd) params.savingDateEnd = query.value.savingDateEnd; const res = await savingApi.page(params); const d = res.data; list.value = (d.records || []).map(r => ({ ...r, _records: [] })); total.value = Number(d.total) || 0; list.value.forEach(async (row) => { try { const recRes = await savingApi.getRecords(row.id); row._records = recRes.data || [] } catch (e) { } }) } finally { loading.value = false }
+  try { const params = { pageNum: pageNum.value, pageSize: pageSize.value, familyId: userStore.currentFamily.id }; if (query.value.savingDateStart) params.savingDateStart = query.value.savingDateStart; if (query.value.savingDateEnd) params.savingDateEnd = query.value.savingDateEnd; const res = await savingApi.page(params); const d = res.data; list.value = (d.records || []).map(r => ({ ...r, _records: r.records || [] })); total.value = Number(d.total) || 0 } finally { loading.value = false }
 }
 
 function getMemberTotal(row, memberId) {
@@ -124,7 +124,7 @@ async function openEditDialog(row) {
   isEdit.value = true; currentSaving.value = row
   saveForm.value = { savingDate: row.savingDate || '' }
   saveRecords.value = buildAllRecords()
-  try { const res = await savingApi.getRecords(row.id); const existRecords = res.data || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null }) } catch(e) {}
+  const existRecords = row.records || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null })
   showSaveDialog.value = true
 }
 
@@ -155,7 +155,7 @@ async function saveSaving() {
 async function openDetailDialog(saving) {
   currentSaving.value = saving
   currentRecords.value = buildAllRecords()
-  try { const res = await savingApi.getRecords(saving.id); const existRecords = res.data || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null }) } catch(e) {}
+  const existRecords = saving.records || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null })
   showDetailDialog.value = true
 }
 

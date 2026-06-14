@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minibill.bus.mapper.BusMaintenanceMapper">
+
+    <select id="pageWithAddress" resultType="com.minibill.bus.entity.BusMaintenance">
+        SELECT m.id, m.address_id, m.type, m.cost_date, m.cost, m.remark,
+               m.create_time, m.update_time, m.create_by, m.update_by, m.del_flag,
+               a.name AS address_name
+        FROM bus_maintenance m
+        LEFT JOIN bus_address a ON m.address_id = a.id
+        <where>
+            m.del_flag = 0
+            <if test="familyId != null">AND a.family_id = #{familyId}</if>
+            <if test="addressId != null">AND m.address_id = #{addressId}</if>
+            <if test="type != null and type != ''">AND m.type = #{type}</if>
+            <if test="costDateStart != null and costDateStart != ''">AND m.cost_date &gt;= #{costDateStart}::date</if>
+            <if test="costDateEnd != null and costDateEnd != ''">AND m.cost_date &lt;= #{costDateEnd}::date</if>
+        </where>
+        ORDER BY m.cost_date DESC
+    </select>
+
+</mapper>

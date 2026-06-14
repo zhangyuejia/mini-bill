@@ -1,8 +1,8 @@
 <template>
   <div class="app-layout" :class="{ 'sidebar-collapsed': isCollapsed }">
-    <div v-if="isMobile && !isCollapsed" class="mobile-overlay" @click="toggleSidebar" />
+    <div v-if="isMobile && mobileSidebarOpen" class="mobile-overlay" @click="closeMobileSidebar" />
 
-    <aside class="sidebar">
+    <aside class="sidebar" :class="{ 'mobile-open': isMobile && mobileSidebarOpen }">
       <div class="sidebar-header">
         <div class="logo">
           <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
@@ -12,7 +12,7 @@
               <stop offset="0%" stop-color="#409eff"/><stop offset="100%" stop-color="#337ecc"/>
             </linearGradient></defs>
           </svg>
-          <span v-show="!isCollapsed || !isMobile" class="logo-text">财小账</span>
+          <span v-show="!isCollapsed || !isMobile || mobileSidebarOpen" class="logo-text">财小账</span>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
 
       <div class="sidebar-footer">
         <div class="sidebar-collapse-btn" @click="toggleSidebar">
-          <el-icon :size="18"><Fold v-if="!isCollapsed" /><Expand v-else /></el-icon>
+          <el-icon :size="18"><template v-if="isMobile && mobileSidebarOpen"><ArrowLeftBold /></template><template v-else><Fold v-if="!isCollapsed" /><Expand v-else /></template></el-icon>
         </div>
       </div>
     </aside>
@@ -130,7 +130,7 @@ import { ElMessage } from 'element-plus'
 import {
   Fold, Expand, ArrowDown, HomeFilled, Check, Plus,
   House, User, Avatar, Menu, Collection, Goods, Coin, Wallet,
-  MapLocation, Ticket, Setting
+  MapLocation, Ticket, Setting, ArrowLeftBold, Tools
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -139,6 +139,7 @@ const userStore = useUserStore()
 
 const isCollapsed = ref(false)
 const isMobile = ref(false)
+const mobileSidebarOpen = ref(false)
 const showCreateFamily = ref(false)
 const loading = ref(false)
 const familyForm = ref({ name: '' })
@@ -160,7 +161,8 @@ const menuDefinition = [
   ]},
   { name: '账单管理', icon: 'Ticket', children: [
     { path: 'bill', name: '房租水电', icon: 'Ticket' },
-    { path: 'item-cost', name: '物件费用', icon: 'Coin' }
+    { path: 'item-cost', name: '物件费用', icon: 'Coin' },
+    { path: 'maintenance', name: '维护费用', icon: 'Tools' }
   ]},
   { name: '财富管理', icon: 'Wallet', children: [
     { path: 'saving-item', name: '储蓄项管理', icon: 'Coin' },
@@ -180,8 +182,28 @@ const filteredMenus = computed(() => {
   }))
 })
 
-function toggleSidebar() { isCollapsed.value = !isCollapsed.value }
-function checkMobile() { isMobile.value = window.innerWidth <= 768; if (isMobile.value) isCollapsed.value = true }
+function toggleSidebar() {
+  if (isMobile.value) {
+    mobileSidebarOpen.value = !mobileSidebarOpen.value
+  } else {
+    isCollapsed.value = !isCollapsed.value
+  }
+}
+function closeMobileSidebar() { mobileSidebarOpen.value = false }
+function checkMobile() {
+  const wasMobile = isMobile.value
+  isMobile.value = window.innerWidth <= 768
+  // Reset states when switching between mobile/desktop
+  if (isMobile.value && !wasMobile) {
+    isCollapsed.value = true
+    mobileSidebarOpen.value = false
+  } else if (!isMobile.value && wasMobile) {
+    isCollapsed.value = false
+    mobileSidebarOpen.value = false
+  } else if (isMobile.value) {
+    mobileSidebarOpen.value = false
+  }
+}
 
 async function switchFamily(familyId) {
   userStore.setCurrentFamily(familyId)
@@ -212,7 +234,7 @@ onMounted(() => {
   if (!userStore.isAdmin) userStore.fetchFamilies()
 })
 
-watch(isMobile, (val) => { if (val) isCollapsed.value = true })
+watch(isMobile, (val) => { if (val) { isCollapsed.value = true; mobileSidebarOpen.value = false } else { isCollapsed.value = false; mobileSidebarOpen.value = false } })
 </script>
 
 <style lang="scss" scoped>
@@ -237,6 +259,21 @@ $mobile-breakpoint: 768px;
   flex-shrink: 0;
   z-index: 100;
   position: relative;
+
+  @media (max-width: $mobile-breakpoint) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: $sidebar-width !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
 
   .sidebar-header {
     height: $header-height;
@@ -339,6 +376,10 @@ $mobile-breakpoint: 768px;
   top: 0;
   z-index: 10;
 
+  @media (max-width: $mobile-breakpoint) {
+    padding: 0 12px;
+  }
+
   .header-left {
     display: flex;
     align-items: center;
@@ -349,6 +390,10 @@ $mobile-breakpoint: 768px;
       color: #606266;
       transition: color 0.2s;
       &:hover { color: #409eff; }
+    }
+
+    @media (max-width: $mobile-breakpoint) {
+      .el-breadcrumb { display: none; }
     }
   }
 
@@ -395,6 +440,19 @@ $mobile-breakpoint: 768px;
 
       .username { font-size: 14px; color: #303133; font-weight: 500; }
     }
+
+    @media (max-width: $mobile-breakpoint) {
+      gap: 8px;
+      .family-switcher {
+        padding: 4px 8px;
+        font-size: 12px;
+        .family-name { max-width: 60px; }
+      }
+      .user-info {
+        padding: 2px 6px;
+        .username { display: none; }
+      }
+    }
   }
 }
 
@@ -410,6 +468,12 @@ $mobile-breakpoint: 768px;
   background: rgba(0,0,0,0.4);
   z-index: 99;
   backdrop-filter: blur(4px);
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .collapse-btn {
@@ -418,7 +482,9 @@ $mobile-breakpoint: 768px;
 
 // Collapsed state
 .sidebar-collapsed {
-  .sidebar { width: $sidebar-collapsed-width; }
+  .sidebar { width: $sidebar-collapsed-width;
+    @media (max-width: $mobile-breakpoint) { width: $sidebar-width !important; }
+  }
   .family-name, .username { display: none; }
   .family-switcher { padding: 6px 10px; }
 }

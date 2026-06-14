@@ -1,8 +1,8 @@
-package com.minibill.system.config;
+package com.minibill.common.config;
 
 import com.minibill.common.annotation.DictText;
 import com.minibill.common.result.Result;
-import com.minibill.system.service.DictService;
+import com.minibill.common.service.DictLabelProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
@@ -23,10 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @ControllerAdvice
+@ConditionalOnBean(DictLabelProvider.class)
 @RequiredArgsConstructor
 public class DictAspect implements ResponseBodyAdvice<Object> {
 
-    private final DictService dictService;
+    private final DictLabelProvider dictLabelProvider;
 
     /** 缓存在类上的字典字段信息 */
     private static final Map<Class<?>, List<DictFieldInfo>> FIELD_CACHE = new ConcurrentHashMap<>();
@@ -93,7 +95,7 @@ public class DictAspect implements ResponseBodyAdvice<Object> {
                 if (value == null) continue;
 
                 // 从数据库查字典标签（已含 Redis 缓存）
-                String label = dictService.getDictLabelByCodeAndValue(info.dictCode, String.valueOf(value));
+                String label = dictLabelProvider.getDictLabelByCodeAndValue(info.dictCode, String.valueOf(value));
                 if (label != null) {
                     info.textField.set(entity, label);
                 }

@@ -2,8 +2,8 @@ package com.minibill.bus.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.minibill.common.result.Result;
+import com.minibill.bus.entity.BusAttachment;
 import com.minibill.bus.entity.BusBill;
-import com.minibill.bus.entity.BusBillAttachment;
 import com.minibill.bus.service.BillService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.minibill.common.constant.Constants.*;
 
 /**
  * 账单管理控制器
@@ -63,14 +65,15 @@ public class BillController {
 
     @Operation(summary = "获取账单附件")
     @GetMapping("/{billId}/attachments")
-    public Result<List<BusBillAttachment>> getAttachments(@PathVariable Long billId) {
+    public Result<List<BusAttachment>> getAttachments(@PathVariable Long billId) {
         return Result.success(billService.getAttachments(billId));
     }
 
     @Operation(summary = "添加账单附件")
     @PostMapping("/{billId}/attachment")
-    public Result<Void> addAttachment(@PathVariable Long billId, @RequestBody BusBillAttachment attachment) {
-        attachment.setBillId(billId);
+    public Result<Void> addAttachment(@PathVariable Long billId, @RequestBody BusAttachment attachment) {
+        attachment.setBizType(BIZ_TYPE_BILL);
+        attachment.setBizId(billId);
         attachment.setId(null);
         billService.addAttachment(attachment);
         return Result.success();
@@ -81,12 +84,5 @@ public class BillController {
     public Result<Void> deleteAttachment(@PathVariable Long id) {
         billService.deleteAttachment(id);
         return Result.success();
-    }
-
-    @Operation(summary = "迁移历史账单：从备注提取管理费")
-    @PostMapping("/migrate-management-fee")
-    public Result<String> migrateManagementFee() {
-        int count = billService.migrateManagementFee();
-        return Result.success("迁移完成，共处理 " + count + " 条记录");
     }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.minibill.bus.mapper.BusItemMapper">
+
+    <select id="pageItemWithAddress" resultType="com.minibill.bus.entity.BusItem">
+        SELECT i.id, i.family_id, i.address_id, i.name, i.type,
+               i.purchase_amount, i.purchase_date, i.deactivation_date,
+               i.residual_value, i.remark,
+               i.create_time, i.update_time, i.create_by, i.update_by, i.del_flag,
+               a.name AS address_name
+        FROM bus_item i
+        LEFT JOIN bus_address a ON i.address_id = a.id
+        <where>
+            i.del_flag = 0
+            <if test="q.familyId != null">AND i.family_id = #{q.familyId}</if>
+            <if test="q.addressId != null">AND i.address_id = #{q.addressId}</if>
+            <if test="q.name != null and q.name != ''">AND i.name LIKE CONCAT('%', #{q.name}, '%')</if>
+            <if test="q.type != null and q.type != ''">AND i.type = #{q.type}</if>
+            <if test="q.purchaseAmountStart != null">AND i.purchase_amount &gt;= #{q.purchaseAmountStart}</if>
+            <if test="q.purchaseAmountEnd != null">AND i.purchase_amount &lt;= #{q.purchaseAmountEnd}</if>
+            <if test="q.purchaseDateStart != null">AND i.purchase_date &gt;= #{q.purchaseDateStart}::date</if>
+            <if test="q.purchaseDateEnd != null">AND i.purchase_date &lt;= #{q.purchaseDateEnd}::date</if>
+        </where>
+        ORDER BY i.purchase_date DESC
+    </select>
+
+</mapper>

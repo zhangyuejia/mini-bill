@@ -1,8 +1,8 @@
 package com.minibill.bus.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.minibill.bus.entity.BusAttachment;
 import com.minibill.bus.entity.BusBill;
-import com.minibill.bus.entity.BusBillAttachment;
 
 import java.util.List;
 
@@ -21,15 +21,9 @@ public interface BillService {
 
     void deleteBill(Long id);
 
-    List<BusBillAttachment> getAttachments(Long billId);
+    List<BusAttachment> getAttachments(Long billId);
 
-    void addAttachment(BusBillAttachment attachment);
+    void addAttachment(BusAttachment attachment);
 
     void deleteAttachment(Long id);
-
-    /**
-     * 迁移历史账单：从备注中提取管理费，分摊到 managementFee 和 otherFee
-     * @return 迁移的记录数
-     */
-    int migrateManagementFee();
 }

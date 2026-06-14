@@ -2,6 +2,7 @@ package com.minibill.bus.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.minibill.common.result.Result;
+import com.minibill.bus.dto.ItemPageQuery;
 import com.minibill.bus.entity.*;
 import com.minibill.bus.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.minibill.common.constant.Constants.*;
 
 /**
  * 物件管理控制器
@@ -26,11 +29,8 @@ public class ItemController {
 
     @Operation(summary = "分页查询物件")
     @GetMapping("/page")
-    public Result<Page<BusItem>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                      @RequestParam(defaultValue = "10") Integer pageSize,
-                                      @RequestParam Long familyId,
-                                      @RequestParam(required = false) Long addressId) {
-        return Result.success(itemService.pageItem(pageNum, pageSize, familyId, addressId));
+    public Result<Page<BusItem>> page(ItemPageQuery query) {
+        return Result.success(itemService.pageItem(query));
     }
 
     @Operation(summary = "根据住址获取物件列表")
@@ -68,14 +68,15 @@ public class ItemController {
 
     @Operation(summary = "获取物件附件")
     @GetMapping("/{itemId}/attachments")
-    public Result<List<BusItemAttachment>> getAttachments(@PathVariable Long itemId) {
+    public Result<List<BusAttachment>> getAttachments(@PathVariable Long itemId) {
         return Result.success(itemService.getItemAttachments(itemId));
     }
 
     @Operation(summary = "添加物件附件")
     @PostMapping("/{itemId}/attachment")
-    public Result<Void> addAttachment(@PathVariable Long itemId, @RequestBody BusItemAttachment attachment) {
-        attachment.setItemId(itemId);
+    public Result<Void> addAttachment(@PathVariable Long itemId, @RequestBody BusAttachment attachment) {
+        attachment.setBizType(BIZ_TYPE_ITEM);
+        attachment.setBizId(itemId);
         attachment.setId(null);
         itemService.addItemAttachment(attachment);
         return Result.success();
@@ -125,14 +126,15 @@ public class ItemController {
 
     @Operation(summary = "获取物件费用附件")
     @GetMapping("/cost/{costId}/attachments")
-    public Result<List<BusItemCostAttachment>> getCostAttachments(@PathVariable Long costId) {
+    public Result<List<BusAttachment>> getCostAttachments(@PathVariable Long costId) {
         return Result.success(itemService.getCostAttachments(costId));
     }
 
     @Operation(summary = "添加物件费用附件")
     @PostMapping("/cost/{costId}/attachment")
-    public Result<Void> addCostAttachment(@PathVariable Long costId, @RequestBody BusItemCostAttachment attachment) {
-        attachment.setCostId(costId);
+    public Result<Void> addCostAttachment(@PathVariable Long costId, @RequestBody BusAttachment attachment) {
+        attachment.setBizType(BIZ_TYPE_ITEM_COST);
+        attachment.setBizId(costId);
         attachment.setId(null);
         itemService.addCostAttachment(attachment);
         return Result.success();

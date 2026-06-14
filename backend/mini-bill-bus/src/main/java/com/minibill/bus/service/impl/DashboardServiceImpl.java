@@ -96,9 +96,10 @@ public class DashboardServiceImpl implements DashboardService {
                 .eq(BusItem::getFamilyId, familyId)
                 .eq(BusItem::getDelFlag, DEL_FLAG_NORMAL));
 
-        // 2. 查所有物件费用记录
-        List<BusItemCost> allCosts = itemCostMapper.selectList(new LambdaQueryWrapper<BusItemCost>()
-                .eq(BusItemCost::getFamilyId, familyId)
+        // 2. 查所有物件费用记录（通过物件ID关联家庭）
+        List<Long> itemIds = items.stream().map(BusItem::getId).collect(Collectors.toList());
+        List<BusItemCost> allCosts = itemIds.isEmpty() ? List.of() : itemCostMapper.selectList(new LambdaQueryWrapper<BusItemCost>()
+                .in(BusItemCost::getItemId, itemIds)
                 .eq(BusItemCost::getDelFlag, DEL_FLAG_NORMAL));
 
         // 按 itemId 分组汇总费用
@@ -119,7 +120,9 @@ public class DashboardServiceImpl implements DashboardService {
             if (daysOwned <= 0) daysOwned = 1;
 
             BigDecimal maintenanceCost = costSumMap.getOrDefault(item.getId(), BigDecimal.ZERO);
-            BigDecimal totalCost = item.getPurchaseAmount().add(maintenanceCost);
+            BigDecimal residualValue = item.getResidualValue() != null ? item.getResidualValue() : BigDecimal.ZERO;
+            // 总投入 = 购买金额 + 维护费用 - 残值
+            BigDecimal totalCost = item.getPurchaseAmount().add(maintenanceCost).subtract(residualValue);
 
             BigDecimal dailyCost = totalCost.divide(BigDecimal.valueOf(daysOwned), 2, RoundingMode.HALF_UP);
 
@@ -127,6 +130,7 @@ public class DashboardServiceImpl implements DashboardService {
             row.put("name", item.getName());
             row.put("purchaseAmount", item.getPurchaseAmount());
             row.put("maintenanceCost", maintenanceCost);
+            row.put("residualValue", residualValue);
             row.put("totalCost", totalCost);
             row.put("daysOwned", daysOwned);
             row.put("dailyCost", dailyCost);

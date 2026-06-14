@@ -3,6 +3,7 @@ package com.minibill.system.controller;
 import com.minibill.api.dto.UserDTO;
 import com.minibill.system.entity.SysUser;
 import com.minibill.system.mapper.SysUserMapper;
+import com.minibill.system.service.DictService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class InnerController {
 
     private final SysUserMapper userMapper;
+    private final DictService dictService;
 
     @GetMapping("/user/{id}")
     public UserDTO getUserById(@PathVariable Long id) {
@@ -55,6 +57,11 @@ public class InnerController {
     @GetMapping("/user/hasRole")
     public Boolean hasRole(@RequestParam Long userId, @RequestParam String roleCode) {
         return userMapper.hasRole(userId, roleCode);
+    }
+
+    @GetMapping("/dict/label")
+    public String getDictLabel(@RequestParam String dictCode, @RequestParam String value) {
+        return dictService.getDictLabelByCodeAndValue(dictCode, value);
     }
 
     private UserDTO toUserDTO(SysUser user) {
