@@ -109,7 +109,7 @@
           <h4>物件日均成本</h4>
           <span style="font-size:12px;color:#909399;">（总投入 ÷ 持有天数）</span>
         </div>
-        <div class="chart-body" ref="itemCostChartRef" style="height:400px;"></div>
+        <div class="chart-body" ref="itemCostChartRef" :style="{ height: itemCostChartHeight + 'px' }"></div>
       </div>
     </template>
   </div>
@@ -130,6 +130,7 @@ const summary = ref(null)
 const savingChartRef = ref(null)
 const billChartRef = ref(null)
 const itemCostChartRef = ref(null)
+const itemCostChartHeight = ref(400)
 const addresses = ref([])
 const savingYear = ref('')
 const billAddressId = ref(null)
@@ -205,6 +206,13 @@ function renderItemCostChart(data) {
   }
   const names = data.map(d => d.name)
   const dailyValues = data.map(d => Number(d.dailyCost) || 0)
+  // 动态高度：每条最少 24px，最小 400px
+  const rowHeight = 24
+  const minHeight = 400
+  const dynamicHeight = Math.max(minHeight, data.length * rowHeight + 60)
+  itemCostChartHeight.value = dynamicHeight
+  // 自适应柱宽：高度够用则固定 20，否则缩窄
+  const barW = data.length > 18 ? Math.max(10, Math.floor((dynamicHeight - 100) / data.length)) : 20
   chart.setOption({
     tooltip: {
       trigger: 'axis', axisPointer: { type: 'shadow' },
@@ -221,10 +229,10 @@ function renderItemCostChart(data) {
     },
     grid: { left: 120, right: 60, top: 20, bottom: 40 },
     xAxis: { type: 'value', name: '日均成本(元)', axisLabel: { formatter: v => '¥' + v.toFixed(1) } },
-    yAxis: { type: 'category', data: names, axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'category', data: names, axisLabel: { fontSize: 12, interval: 0 } },
     series: [{
       type: 'bar', data: dailyValues,
-      barWidth: 20,
+      barWidth: barW,
       itemStyle: {
         borderRadius: [0, 4, 4, 0],
         color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
@@ -370,6 +378,14 @@ onMounted(() => {
 @media (max-width: 768px) {
   .welcome-section { padding: 24px 20px; .welcome-text h2 { font-size: 18px; } }
   .stat-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .sum-card { padding: 14px; gap: 10px;
+    .sum-icon { width: 38px; height: 38px; border-radius: 10px; }
+    .sum-body {
+      .sum-value { font-size: 17px; }
+      .sum-sub { white-space: normal; }
+    }
+  }
   .action-grid { flex-direction: column; }
   .action-card { width: 100%; }
   .chart-row { grid-template-columns: 1fr; }
