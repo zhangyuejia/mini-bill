@@ -36,7 +36,10 @@ spring:
 
       globalcors:
         add-to-simple-url-handler-mapping: true
-
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
 logging:
   level:
     com.minibill: debug

@@ -1,0 +1,36 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.run/
+
+# Backend build artifacts
+backend/target/
+backend/**/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Logs & uploads
+logs/
+upload/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+deploy.ps1
+
+# Documentation
+*.md
+!README.md

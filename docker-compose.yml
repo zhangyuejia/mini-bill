@@ -1,0 +1,21 @@
+services:
+  mini-bill:
+    image: mini-bill:latest
+    container_name: mini-bill
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # 对外端口 = 内部端口 + 1000，避免与本地调试冲突
+      - "1080:80"    # 前端 + API 入口
+      - "9080:8080"  # Gateway
+      - "9081:8081"  # System Service
+      - "9082:8082"  # Bus Service
+    volumes:
+      # 日志映射到宿主机
+      - D:\Program\mini-bill\logs:/app/logs
+      # 上传文件持久化
+      - D:\Program\mini-bill\upload:/app/upload
+    environment:
+      - TZ=Asia/Shanghai

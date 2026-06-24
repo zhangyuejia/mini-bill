@@ -47,7 +47,7 @@ mybatis-plus:
 # 文件上传配置
 minibill:
   file:
-    upload-path: ./upload
+    upload-path: D:\Program\mini-bill\upload
 
 # 日志配置
 logging:
