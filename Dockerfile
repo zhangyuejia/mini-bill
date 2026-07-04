@@ -4,6 +4,20 @@
 FROM maven:3.9-eclipse-temurin-17 AS backend-builder
 WORKDIR /build
 
+# --- 代理支持 ---
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ENV http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY}
+
+# Maven 代理设置
+RUN if [ -n "$HTTP_PROXY" ]; then \
+      mkdir -p /root/.m2 && \
+      proxy_host=$(echo $HTTP_PROXY | sed 's|.*://||;s|:.*||') && \
+      proxy_port=$(echo $HTTP_PROXY | sed 's|.*:||') && \
+      echo '<?xml version="1.0" encoding="UTF-8"?><settings><proxies><proxy><id>local</id><active>true</active><protocol>http</protocol><host>'$proxy_host'</host><port>'$proxy_port'</port><nonProxyHosts>localhost|127.0.0.1|*.local</nonProxyHosts></proxy></proxies></settings>' > /root/.m2/settings.xml; \
+    fi
+
 # 先复制 pom 文件，利用 Docker 缓存层加速
 COPY backend/pom.xml ./
 COPY backend/mini-bill-common/pom.xml ./mini-bill-common/
@@ -25,7 +39,19 @@ RUN mvn clean package -DskipTests -B -q -pl mini-bill-gateway,mini-bill-system,m
 FROM node:22-alpine AS frontend-builder
 WORKDIR /build
 
-# Alpine 需要这些包来编译 sass 等原生模块
+# --- 代理支持 ---
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ENV http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY}
+
+# 配置 npm 代理
+RUN if [ -n "$HTTP_PROXY" ]; then \
+      npm config set proxy "$HTTP_PROXY" && \
+      npm config set https-proxy "${HTTPS_PROXY:-$HTTP_PROXY}"; \
+    fi
+
+# Alpine 需要这些包来编译 sass 等原生模块（apk 遵循 http_proxy/https_proxy 环境变量）
 RUN apk add --no-cache python3 make g++
 
 COPY frontend/package.json frontend/package-lock.json ./
@@ -39,6 +65,18 @@ RUN npm run build
 # Stage 3: 最终运行镜像
 # ============================
 FROM eclipse-temurin:17-jre
+
+# --- 代理支持（apt） ---
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ENV http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY}
+
+# 配置 apt 代理
+RUN if [ -n "$HTTP_PROXY" ]; then \
+      echo "Acquire::http::Proxy \"$HTTP_PROXY\";" > /etc/apt/apt.conf.d/99proxy && \
+      echo "Acquire::https::Proxy \"${HTTPS_PROXY:-$HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; \
+    fi
 
 # 安装 nginx + curl（healthcheck 需要）
 RUN apt-get update \

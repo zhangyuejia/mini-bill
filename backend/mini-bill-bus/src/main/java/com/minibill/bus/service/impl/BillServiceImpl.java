@@ -141,33 +141,19 @@ public class BillServiceImpl implements BillService {
             bill.setElectricAmount(calculated);
         }
 
-        // 3. 损耗 = (水费+电费) × 5%，作为其他费用
-        if (bill.getWaterAmount() != null && bill.getElectricAmount() != null) {
-            BigDecimal loss = bill.getWaterAmount().add(bill.getElectricAmount())
-                    .multiply(new BigDecimal("0.05"))
-                    .setScale(2, BigDecimal.ROUND_HALF_UP);
-            bill.setOtherFee(loss);
-        } else {
-            bill.setOtherFee(BigDecimal.ZERO);
-        }
+        // 3. 计算各项小计
+        BigDecimal sum = sumTotalAmount(bill);
+        bill.setTotalAmount(sum);
+    }
 
-        // 4. 计算各项小计
+    private static BigDecimal sumTotalAmount(BusBill bill) {
         BigDecimal sum = BigDecimal.ZERO;
         if (bill.getRent() != null) sum = sum.add(bill.getRent());
         if (bill.getWaterAmount() != null) sum = sum.add(bill.getWaterAmount());
         if (bill.getElectricAmount() != null) sum = sum.add(bill.getElectricAmount());
         if (bill.getManagementFee() != null) sum = sum.add(bill.getManagementFee());
         if (bill.getOtherFee() != null) sum = sum.add(bill.getOtherFee());
-
-        // 5. 判断新增还是编辑
-        if (bill.getTotalAmount() == null || bill.getTotalAmount().compareTo(BigDecimal.ZERO) == 0) {
-            // 新增：合计 = 各项之和，抹零 = 0
-            bill.setTotalAmount(sum);
-            bill.setRoundingAmount(BigDecimal.ZERO);
-        } else {
-            // 编辑：合计保持不变，抹零 = 合计 - 各项之和
-            BigDecimal rounding = bill.getTotalAmount().subtract(sum);
-            bill.setRoundingAmount(rounding);
-        }
+        if (bill.getRoundingAmount() != null) sum = sum.add(bill.getRoundingAmount());
+        return sum;
     }
 }

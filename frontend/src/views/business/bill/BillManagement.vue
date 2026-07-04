@@ -124,27 +124,20 @@ function showDialog(row) {
   isEdit.value = !!row; form.value = row ? { ...row, period: row.period ? String(row.period) : "" } : { ...createEmptyForm(), familyId: userStore.currentFamily?.id }; attachmentList.value = []
   // 确保所有数字字段为 Number 类型（API 返回的可能为字符串）
   if (row) {
-    form.value.rent = Number(form.value.rent) || null
-    form.value.waterAmount = Number(form.value.waterAmount) || null
-    form.value.electricAmount = Number(form.value.electricAmount) || null
-    form.value.managementFee = Number(form.value.managementFee) || null
-    form.value.otherFee = Number(form.value.otherFee) || null
-    form.value.totalAmount = Number(form.value.totalAmount) || null
-    form.value.roundingAmount = Number(form.value.roundingAmount) || null
-    form.value.waterPrevReading = Number(form.value.waterPrevReading) || null
-    form.value.waterCurrReading = Number(form.value.waterCurrReading) || null
-    form.value.waterUnitPrice = Number(form.value.waterUnitPrice) || null
-    form.value.electricPrevReading = Number(form.value.electricPrevReading) || null
-    form.value.electricCurrReading = Number(form.value.electricCurrReading) || null
-    form.value.electricUnitPrice = Number(form.value.electricUnitPrice) || null
-  }
-  // 解析历史数据：从备注中提取管理费
-  if (row && row.remark) {
-    const m = row.remark.match(/管理费(\d+(\.\d+)?)/)
-    if (m) {
-      form.value.managementFee = parseFloat(m[1])
-      form.value.remark = form.value.remark.replace(/管理费\d+(\.\d+)?[，,、\s]*/, "").trim()
-    }
+    const toNum = (v) => isNaN(Number(v)) ? null : Number(v)
+    form.value.rent = toNum(form.value.rent)
+    form.value.waterAmount = toNum(form.value.waterAmount)
+    form.value.electricAmount = toNum(form.value.electricAmount)
+    form.value.managementFee = toNum(form.value.managementFee)
+    form.value.otherFee = toNum(form.value.otherFee)
+    form.value.totalAmount = toNum(form.value.totalAmount)
+    form.value.roundingAmount = toNum(form.value.roundingAmount)
+    form.value.waterPrevReading = toNum(form.value.waterPrevReading)
+    form.value.waterCurrReading = toNum(form.value.waterCurrReading)
+    form.value.waterUnitPrice = toNum(form.value.waterUnitPrice)
+    form.value.electricPrevReading = toNum(form.value.electricPrevReading)
+    form.value.electricCurrReading = toNum(form.value.electricCurrReading)
+    form.value.electricUnitPrice = toNum(form.value.electricUnitPrice)
   }
   if (row) { attachmentList.value = (row.attachments || []).map(a => ({ ...a, _isNew: false })) }
   // 触发水电费自动计算

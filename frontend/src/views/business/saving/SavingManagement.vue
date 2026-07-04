@@ -124,7 +124,7 @@ async function openEditDialog(row) {
   isEdit.value = true; currentSaving.value = row
   saveForm.value = { savingDate: row.savingDate || '' }
   saveRecords.value = buildAllRecords()
-  const existRecords = row.records || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null })
+  const existRecords = row.records || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
   showSaveDialog.value = true
 }
 
@@ -155,7 +155,7 @@ async function saveSaving() {
 async function openDetailDialog(saving) {
   currentSaving.value = saving
   currentRecords.value = buildAllRecords()
-  const existRecords = saving.records || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = Number(er.amount) || null })
+  const existRecords = saving.records || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
   showDetailDialog.value = true
 }
 

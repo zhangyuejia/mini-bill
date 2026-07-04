@@ -20,6 +20,11 @@ $LOG_DIR      = "D:\Program\mini-bill\logs"
 $UPLOAD_DIR   = "D:\Program\mini-bill\upload"
 $COMPOSE_FILE = Join-Path $PSScriptRoot "docker-compose.yml"
 
+# --- 代理配置 ---
+$USE_PROXY    = $true
+$PROXY_HOST   = "http://host.docker.internal:7890"
+$NO_CACHE     = $false    # $true 时强制全量重建（仅首次或排查问题时打开）
+
 # ============================================
 # 颜色输出函数
 # ============================================
@@ -106,7 +111,24 @@ Write-Step "4/6 构建 Docker 镜像..."
 
 Push-Location $PSScriptRoot
 
-docker compose -f $COMPOSE_FILE build --no-cache
+# 组装 docker compose 构建参数
+$buildArgs = @("compose", "-f", $COMPOSE_FILE, "build")
+if ($NO_CACHE) {
+    Write-Warn "使用 --no-cache 模式（全量重建）"
+    $buildArgs += "--no-cache"
+}
+if ($USE_PROXY) {
+    Write-OK "使用代理: $PROXY_HOST"
+    Write-Host "  (host.docker.internal 指向宿主机，确保代理已监听 7890)" -ForegroundColor Gray
+    $buildArgs += "--build-arg"
+    $buildArgs += "HTTP_PROXY=$PROXY_HOST"
+    $buildArgs += "--build-arg"
+    $buildArgs += "HTTPS_PROXY=$PROXY_HOST"
+} else {
+    Write-Warn "未使用代理，境外下载可能较慢"
+}
+
+& docker $buildArgs
 if ($LASTEXITCODE -ne 0) {
     Write-Error "镜像构建失败！退出码: $LASTEXITCODE"
     Pop-Location
