@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+export { messageApi } from './message'
 
 // 认证接口
 export const authApi = {

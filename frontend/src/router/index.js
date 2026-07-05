@@ -104,6 +104,12 @@ const routes = [
         name: 'Saving',
         component: () => import('@/views/business/saving/SavingManagement.vue'),
         meta: { title: '家庭储蓄', icon: 'Wallet' }
+      },
+      {
+        path: 'message',
+        name: 'Message',
+        component: () => import('@/views/business/message/MessageCenter.vue'),
+        meta: { title: '消息中心', icon: 'Bell' }
       }
     ]
   }

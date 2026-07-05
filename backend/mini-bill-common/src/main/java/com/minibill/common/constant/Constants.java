@@ -26,6 +26,9 @@ public interface Constants {
     String CACHE_KEY_MENU = REDIS_KEY_PREFIX + "menu:";
     String CACHE_KEY_DICT = REDIS_KEY_PREFIX + "dict:";
 
+    /** 消息类型 */
+    String MSG_TYPE_BILL_INSPECTION = "bill_inspection";
+
     /** 附件业务类型 */
     String BIZ_TYPE_BILL = "bill";
     String BIZ_TYPE_ITEM = "item";

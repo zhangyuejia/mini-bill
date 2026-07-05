@@ -343,3 +343,33 @@ ALTER TABLE bus_bill ADD COLUMN IF NOT EXISTS management_fee DECIMAL(10,2);
 COMMENT ON COLUMN bus_bill.management_fee IS '管理费';
 ALTER TABLE bus_bill ADD COLUMN IF NOT EXISTS rounding_amount DECIMAL(10,2);
 COMMENT ON COLUMN bus_bill.rounding_amount IS '抹零金额';
+
+-- =============================================
+-- 2026-07 v1.2 消息通知表
+-- =============================================
+CREATE TABLE IF NOT EXISTS bus_message (
+    id BIGINT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    content TEXT,
+    type VARCHAR(50) NOT NULL DEFAULT 'bill_inspection',
+    is_read INTEGER DEFAULT 0,
+    user_id BIGINT NOT NULL,
+    family_id BIGINT,
+    related_bill_id BIGINT,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE bus_message IS '消息通知表';
+COMMENT ON COLUMN bus_message.id IS '主键ID';
+COMMENT ON COLUMN bus_message.title IS '消息标题';
+COMMENT ON COLUMN bus_message.content IS '消息内容';
+COMMENT ON COLUMN bus_message.type IS '消息类型：bill_inspection-账单校验';
+COMMENT ON COLUMN bus_message.is_read IS '是否已读 0-未读 1-已读';
+COMMENT ON COLUMN bus_message.user_id IS '接收用户ID';
+COMMENT ON COLUMN bus_message.family_id IS '关联家庭ID';
+COMMENT ON COLUMN bus_message.related_bill_id IS '关联账单ID';
+COMMENT ON COLUMN bus_message.create_time IS '创建时间';
+
+CREATE INDEX IF NOT EXISTS idx_bus_message_user_read ON bus_message(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_bus_message_type ON bus_message(type);
+CREATE INDEX IF NOT EXISTS idx_bus_message_create_time ON bus_message(create_time);

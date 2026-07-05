@@ -83,6 +83,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
+        // SSE连接无法设置自定义Header，允许通过query参数传递token
+        String tokenParam = request.getQueryParams().getFirst("token");
+        if (tokenParam != null && !tokenParam.isBlank()) {
+            return tokenParam;
+        }
         return null;
     }
 }

@@ -48,6 +48,9 @@ mybatis-plus:
 minibill:
   file:
     upload-path: D:\Program\mini-bill\upload
+  inspection:
+    interval: 1800000   # 巡检间隔（毫秒），默认30分钟
+    enabled: true        # 是否启用巡检任务
 
 # 日志配置
 logging:

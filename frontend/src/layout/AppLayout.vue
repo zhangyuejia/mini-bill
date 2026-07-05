@@ -64,6 +64,12 @@
         </div>
 
         <div class="header-right">
+          <el-badge :value="messageStore.unreadCount" :hidden="messageStore.unreadCount === 0" :max="99" class="message-badge">
+            <el-icon :size="20" style="cursor: pointer" @click="router.push('/message')">
+              <Bell />
+            </el-icon>
+          </el-badge>
+
           <el-dropdown v-if="userStore.families.length > 0" @command="switchFamily">
             <span class="family-switcher">
               <el-icon><HomeFilled /></el-icon>
@@ -125,17 +131,23 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useMessageStore } from '@/stores/message'
+import { useSSE } from '@/composables/useSSE'
 import { familyApi } from '@/api'
 import { ElMessage } from 'element-plus'
 import {
   Fold, Expand, ArrowDown, HomeFilled, Check, Plus,
   House, User, Avatar, Menu, Collection, Goods, Coin, Wallet,
-  MapLocation, Ticket, Setting, ArrowLeftBold, Tools
+  MapLocation, Ticket, Setting, ArrowLeftBold, Tools, Bell
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const messageStore = useMessageStore()
+
+// SSE实时消息推送
+useSSE()
 
 const isCollapsed = ref(false)
 const isMobile = ref(false)
@@ -144,7 +156,7 @@ const showCreateFamily = ref(false)
 const loading = ref(false)
 const familyForm = ref({ name: '' })
 
-const iconMap = { House, User, Avatar, Menu, Collection, HomeFilled, MapLocation, Ticket, Goods, Coin, Wallet, Setting }
+const iconMap = { House, User, Avatar, Menu, Collection, HomeFilled, MapLocation, Ticket, Goods, Coin, Wallet, Setting, Bell, Tools }
 
 const menuDefinition = [
   { path: 'dashboard', name: '首页', icon: 'House' },
@@ -168,6 +180,9 @@ const menuDefinition = [
   { name: '财富管理', icon: 'Wallet', children: [
     { path: 'saving-item', name: '储蓄项管理', icon: 'Coin' },
     { path: 'saving', name: '家庭储蓄', icon: 'Wallet' }
+  ]},
+  { name: '通知消息', icon: 'Bell', children: [
+    { path: 'message', name: '消息中心', icon: 'Bell' }
   ]}
 ]
 
@@ -493,4 +508,13 @@ $mobile-breakpoint: 768px;
 // Dark breadcrumb
 :deep(.el-breadcrumb__inner) { color: #909399; }
 :deep(.el-breadcrumb__inner.is-link) { color: #606266; &:hover { color: #409eff; } }
+
+// Message badge
+.message-badge {
+  cursor: pointer;
+  :deep(.el-badge__content) {
+    top: 2px;
+    right: 8px;
+  }
+}
 </style>
