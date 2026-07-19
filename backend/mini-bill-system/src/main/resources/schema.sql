@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS sys_user (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 -- 角色表
@@ -31,7 +30,6 @@ CREATE TABLE IF NOT EXISTS sys_role (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 -- 菜单表
@@ -50,7 +48,6 @@ CREATE TABLE IF NOT EXISTS sys_menu (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 -- 用户角色关联表
@@ -78,7 +75,6 @@ CREATE TABLE IF NOT EXISTS sys_dict_type (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 -- 字典数据表
@@ -94,7 +90,6 @@ CREATE TABLE IF NOT EXISTS sys_dict_data (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 -- 初始化数据
@@ -123,7 +118,6 @@ COMMENT ON COLUMN sys_user.create_time IS '创建时间';
 COMMENT ON COLUMN sys_user.update_time IS '更新时间';
 COMMENT ON COLUMN sys_user.create_by IS '创建人ID';
 COMMENT ON COLUMN sys_user.update_by IS '更新人ID';
-COMMENT ON COLUMN sys_user.del_flag IS '逻辑删除 0-正常 1-已删';
 
 COMMENT ON TABLE sys_role IS '系统角色表';
 COMMENT ON COLUMN sys_role.id IS '主键ID';

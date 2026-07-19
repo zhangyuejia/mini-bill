@@ -38,7 +38,6 @@ public class BillServiceImpl implements BillService {
                 .eq(addressId != null, BusBill::getAddressId, addressId)
                 .ge(periodStart != null, BusBill::getPeriod, periodStart)
                 .le(periodEnd != null, BusBill::getPeriod, periodEnd)
-                .eq(BusBill::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusBill::getPeriod);
         Page<BusBill> result = billMapper.selectPage(page, wrapper);
 
@@ -98,8 +97,7 @@ public class BillServiceImpl implements BillService {
     public void deleteBill(Long id) {
         BusBill bill = billMapper.selectById(id);
         if (bill != null) {
-            bill.setDelFlag(DEL_FLAG_DELETED);
-            billMapper.updateById(bill);
+            billMapper.deleteById(id);
         }
     }
 

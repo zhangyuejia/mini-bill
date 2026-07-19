@@ -30,12 +30,13 @@ spring:
 
   cloud:
     nacos:
+      username: nacos
+      password: nacos
       discovery:
         server-addr: 192.168.0.121:8848
         namespace: mini-bill
-        username: nacos
-        password: nacos
       config:
+        enabled: false
         import-check:
           enabled: false
 
@@ -44,9 +45,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: ASSIGN_ID
-      logic-delete-field: delFlag
-      logic-delete-value: 1
-      logic-not-delete-value: 0
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true

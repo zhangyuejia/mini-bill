@@ -19,7 +19,6 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
-        this.strictInsertFill(metaObject, "delFlag", () -> Constants.DEL_FLAG_NORMAL, Integer.class);
         this.strictInsertFill(metaObject, "createBy", () -> getCurrentUserId(), Long.class);
         this.strictInsertFill(metaObject, "updateBy", () -> getCurrentUserId(), Long.class);
     }

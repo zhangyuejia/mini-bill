@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
     public Page<SysUser> pageUser(Integer pageNum, Integer pageSize, String keyword) {
         Page<SysUser> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getDelFlag, DEL_FLAG_NORMAL)
                 .and(StringUtils.hasText(keyword), w -> w
                         .like(SysUser::getUsername, keyword)
                         .or()
@@ -47,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public SysUser getUserById(Long id) {
         SysUser user = userMapper.selectById(id);
-        if (user == null || DEL_FLAG_DELETED.equals(user.getDelFlag())) {
+        if (user == null) {
             throw new BusinessException("用户不存在");
         }
         return user;

@@ -34,7 +34,4 @@ public class BaseEntity implements Serializable {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
-
-    @TableField(fill = FieldFill.INSERT)
-    private Integer delFlag;
 }

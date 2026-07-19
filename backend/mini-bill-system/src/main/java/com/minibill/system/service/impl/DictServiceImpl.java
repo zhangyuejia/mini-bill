@@ -35,7 +35,6 @@ public class DictServiceImpl implements DictService {
     public Page<SysDictType> pageDictType(Integer pageNum, Integer pageSize, String keyword) {
         Page<SysDictType> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysDictType> wrapper = new LambdaQueryWrapper<SysDictType>()
-                .eq(SysDictType::getDelFlag, DEL_FLAG_NORMAL)
                 .and(StringUtils.hasText(keyword), w -> w
                         .like(SysDictType::getName, keyword)
                         .or()
@@ -47,7 +46,6 @@ public class DictServiceImpl implements DictService {
     @Override
     public List<SysDictType> listDictType() {
         return dictTypeMapper.selectList(new LambdaQueryWrapper<SysDictType>()
-                .eq(SysDictType::getDelFlag, DEL_FLAG_NORMAL)
                 .eq(SysDictType::getStatus, STATUS_ENABLE));
     }
 
@@ -55,8 +53,7 @@ public class DictServiceImpl implements DictService {
     @Transactional(rollbackFor = Exception.class)
     public void addDictType(SysDictType dictType) {
         Long count = dictTypeMapper.selectCount(new LambdaQueryWrapper<SysDictType>()
-                .eq(SysDictType::getCode, dictType.getCode())
-                .eq(SysDictType::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(SysDictType::getCode, dictType.getCode()));
         if (count > 0) {
             throw new BusinessException("字典编码已存在");
         }
@@ -77,8 +74,7 @@ public class DictServiceImpl implements DictService {
         if (type != null) {
             dictDataMapper.delete(new LambdaQueryWrapper<SysDictData>()
                     .eq(SysDictData::getDictTypeId, id));
-            type.setDelFlag(DEL_FLAG_DELETED);
-            dictTypeMapper.updateById(type);
+            dictTypeMapper.deleteById(id);
             redisUtil.delete(CACHE_KEY_DICT + type.getCode());
         }
     }
@@ -90,7 +86,6 @@ public class DictServiceImpl implements DictService {
         Page<SysDictData> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysDictData> wrapper = new LambdaQueryWrapper<SysDictData>()
                 .eq(SysDictData::getDictTypeId, dictTypeId)
-                .eq(SysDictData::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByAsc(SysDictData::getSort);
         return dictDataMapper.selectPage(page, wrapper);
     }
@@ -104,15 +99,13 @@ public class DictServiceImpl implements DictService {
         }
 
         SysDictType type = dictTypeMapper.selectOne(new LambdaQueryWrapper<SysDictType>()
-                .eq(SysDictType::getCode, dictCode)
-                .eq(SysDictType::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(SysDictType::getCode, dictCode));
         if (type == null) {
             return List.of();
         }
 
         List<SysDictData> list = dictDataMapper.selectList(new LambdaQueryWrapper<SysDictData>()
                 .eq(SysDictData::getDictTypeId, type.getId())
-                .eq(SysDictData::getDelFlag, DEL_FLAG_NORMAL)
                 .eq(SysDictData::getStatus, STATUS_ENABLE)
                 .orderByAsc(SysDictData::getSort));
 

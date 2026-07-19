@@ -16,9 +16,6 @@ public interface Constants {
     String SYS_ADMIN_ROLE = "ADMIN";
     String SYS_DEFAULT_ROLE = "USER";
 
-    Integer DEL_FLAG_NORMAL = 0;
-    Integer DEL_FLAG_DELETED = 1;
-
     Integer STATUS_ENABLE = 0;
     Integer STATUS_DISABLE = 1;
 

@@ -4,12 +4,11 @@
 
     <select id="pageWithAddress" resultType="com.minibill.bus.entity.BusMaintenance">
         SELECT m.id, m.address_id, m.type, m.cost_date, m.cost, m.remark,
-               m.create_time, m.update_time, m.create_by, m.update_by, m.del_flag,
+               m.create_time, m.update_time, m.create_by, m.update_by,
                a.name AS address_name
         FROM bus_maintenance m
         LEFT JOIN bus_address a ON m.address_id = a.id
         <where>
-            m.del_flag = 0
             <if test="familyId != null">AND a.family_id = #{familyId}</if>
             <if test="addressId != null">AND m.address_id = #{addressId}</if>
             <if test="type != null and type != ''">AND m.type = #{type}</if>

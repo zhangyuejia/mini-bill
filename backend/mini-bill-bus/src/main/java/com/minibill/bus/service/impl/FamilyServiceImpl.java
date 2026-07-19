@@ -47,8 +47,7 @@ public class FamilyServiceImpl implements FamilyService {
 
         List<BusFamily> families = familyMapper.selectList(new LambdaQueryWrapper<BusFamily>()
                 .in(BusFamily::getId, familyIds)
-                .eq(BusFamily::getStatus, STATUS_ENABLE)
-                .eq(BusFamily::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(BusFamily::getStatus, STATUS_ENABLE));
 
         // 填充户主名称
         for (BusFamily f : families) {
@@ -185,7 +184,6 @@ public class FamilyServiceImpl implements FamilyService {
     public Page<BusFamily> pageFamily(Integer pageNum, Integer pageSize, String keyword) {
         Page<BusFamily> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<BusFamily> wrapper = new LambdaQueryWrapper<BusFamily>()
-                .eq(BusFamily::getDelFlag, DEL_FLAG_NORMAL)
                 .like(keyword != null, BusFamily::getName, keyword)
                 .orderByDesc(BusFamily::getCreateTime);
         return familyMapper.selectPage(page, wrapper);

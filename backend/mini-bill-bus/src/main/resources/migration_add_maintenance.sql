@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS bus_maintenance (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 ALTER TABLE bus_maintenance ADD COLUMN IF NOT EXISTS type VARCHAR(50);

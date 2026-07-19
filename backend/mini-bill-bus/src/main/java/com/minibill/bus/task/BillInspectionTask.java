@@ -18,7 +18,7 @@ public class BillInspectionTask {
 
     private final BillInspectionService billInspectionService;
 
-    @Scheduled(fixedDelayString = "${minibill.inspection.interval:1800000}", initialDelay = 30000)
+    @Scheduled(fixedDelayString = "${minibill.inspection.interval:1800000}", initialDelay = 10000)
     public void runInspection() {
         log.info("账单巡检定时任务开始执行");
         try {

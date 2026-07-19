@@ -27,7 +27,6 @@ public class AddressServiceImpl implements AddressService {
     public List<BusAddress> getAddressesByFamily(Long familyId) {
         return addressMapper.selectList(new LambdaQueryWrapper<BusAddress>()
                 .eq(BusAddress::getFamilyId, familyId)
-                .eq(BusAddress::getDelFlag, DEL_FLAG_NORMAL)
                 .eq(BusAddress::getStatus, STATUS_ENABLE));
     }
 
@@ -36,7 +35,6 @@ public class AddressServiceImpl implements AddressService {
         Page<BusAddress> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<BusAddress> wrapper = new LambdaQueryWrapper<BusAddress>()
                 .eq(BusAddress::getFamilyId, familyId)
-                .eq(BusAddress::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusAddress::getCreateTime);
         return addressMapper.selectPage(page, wrapper);
     }
@@ -68,8 +66,7 @@ public class AddressServiceImpl implements AddressService {
     public void deleteAddress(Long id) {
         BusAddress address = addressMapper.selectById(id);
         if (address != null) {
-            address.setDelFlag(DEL_FLAG_DELETED);
-            addressMapper.updateById(address);
+            addressMapper.deleteById(id);
         }
     }
 }

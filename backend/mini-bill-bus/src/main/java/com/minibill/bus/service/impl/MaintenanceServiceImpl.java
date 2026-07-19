@@ -70,8 +70,7 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     public void delete(Long id) {
         BusMaintenance m = maintenanceMapper.selectById(id);
         if (m != null) {
-            m.setDelFlag(DEL_FLAG_DELETED);
-            maintenanceMapper.updateById(m);
+            maintenanceMapper.deleteById(id);
         }
     }
 

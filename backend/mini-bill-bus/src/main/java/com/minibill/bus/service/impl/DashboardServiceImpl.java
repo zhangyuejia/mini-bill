@@ -14,8 +14,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.minibill.common.constant.Constants.DEL_FLAG_NORMAL;
-
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
@@ -31,7 +29,6 @@ public class DashboardServiceImpl implements DashboardService {
     public List<Map<String, Object>> getSavingTrend(Long familyId) {
         List<BusFamilySaving> list = savingMapper.selectList(new LambdaQueryWrapper<BusFamilySaving>()
                 .eq(BusFamilySaving::getFamilyId, familyId)
-                .eq(BusFamilySaving::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByAsc(BusFamilySaving::getSavingDate));
 
         List<Map<String, Object>> result = new ArrayList<>();
@@ -49,7 +46,6 @@ public class DashboardServiceImpl implements DashboardService {
         LambdaQueryWrapper<BusBill> wrapper = new LambdaQueryWrapper<BusBill>()
                 .eq(BusBill::getFamilyId, familyId)
                 .eq(addressId != null, BusBill::getAddressId, addressId)
-                .eq(BusBill::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByAsc(BusBill::getPeriod);
 
         List<BusBill> list = billMapper.selectList(wrapper);
@@ -72,14 +68,27 @@ public class DashboardServiceImpl implements DashboardService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (int month : allMonths) {
             Map<String, Object> row = new LinkedHashMap<>();
-            row.put("month", month + "月");
+            row.put("month", String.format("%02d月", month));
+            Map<String, Map<String, Object>> breakdown = new LinkedHashMap<>();
             for (Map.Entry<Integer, List<BusBill>> entry : byYear.entrySet()) {
                 String key = String.valueOf(entry.getKey());
                 Optional<BusBill> match = entry.getValue().stream()
                         .filter(b -> (b.getPeriod() % 100) == month)
                         .findFirst();
                 row.put(key, match.map(BusBill::getTotalAmount).orElse(null));
+                match.ifPresent(bill -> {
+                    Map<String, Object> details = new LinkedHashMap<>();
+                    details.put("rent", bill.getRent());
+                    details.put("water", bill.getWaterAmount());
+                    details.put("electric", bill.getElectricAmount());
+                    details.put("management", bill.getManagementFee());
+                    details.put("other", bill.getOtherFee());
+                    details.put("rounding", bill.getRoundingAmount());
+                    details.put("remark", bill.getRemark());
+                    breakdown.put(key, details);
+                });
             }
+            row.put("_breakdown", breakdown);
             result.add(row);
         }
         return result;
@@ -90,13 +99,13 @@ public class DashboardServiceImpl implements DashboardService {
         // 1. 查所有正常物件
         List<BusItem> items = itemMapper.selectList(new LambdaQueryWrapper<BusItem>()
                 .eq(BusItem::getFamilyId, familyId)
-                .eq(BusItem::getDelFlag, DEL_FLAG_NORMAL));
+                );
 
         // 2. 查所有物件费用记录（通过物件ID关联家庭）
         List<Long> itemIds = items.stream().map(BusItem::getId).collect(Collectors.toList());
         List<BusItemCost> allCosts = itemIds.isEmpty() ? List.of() : itemCostMapper.selectList(new LambdaQueryWrapper<BusItemCost>()
                 .in(BusItemCost::getItemId, itemIds)
-                .eq(BusItemCost::getDelFlag, DEL_FLAG_NORMAL));
+                );
 
         // 按 itemId 分组汇总费用
         Map<Long, BigDecimal> costSumMap = allCosts.stream()
@@ -152,7 +161,6 @@ public class DashboardServiceImpl implements DashboardService {
         // === 家庭储蓄 ===
         List<BusFamilySaving> savings = savingMapper.selectList(new LambdaQueryWrapper<BusFamilySaving>()
                 .eq(BusFamilySaving::getFamilyId, familyId)
-                .eq(BusFamilySaving::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusFamilySaving::getSavingDate));
         BigDecimal savingTotal = BigDecimal.ZERO;
         if (!savings.isEmpty()) {
@@ -171,8 +179,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         // === 房租水电 ===
         List<BusBill> bills = billMapper.selectList(new LambdaQueryWrapper<BusBill>()
-                .eq(BusBill::getFamilyId, familyId)
-                .eq(BusBill::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(BusBill::getFamilyId, familyId));
         BigDecimal billTotalHistory = bills.stream()
                 .map(b -> b.getTotalAmount() != null ? b.getTotalAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -187,12 +194,12 @@ public class DashboardServiceImpl implements DashboardService {
         // === 维护费用 ===（通过住址关联家庭）
         List<BusAddress> addresses = addressMapper.selectList(new LambdaQueryWrapper<BusAddress>()
                 .eq(BusAddress::getFamilyId, familyId)
-                .eq(BusAddress::getDelFlag, DEL_FLAG_NORMAL));
+                );
         List<Long> addressIds = addresses.stream().map(BusAddress::getId).collect(Collectors.toList());
         List<BusMaintenance> maintenances = addressIds.isEmpty() ? List.of() :
                 maintenanceMapper.selectList(new LambdaQueryWrapper<BusMaintenance>()
                         .in(BusMaintenance::getAddressId, addressIds)
-                        .eq(BusMaintenance::getDelFlag, DEL_FLAG_NORMAL));
+                        );
         BigDecimal maintenanceTotalHistory = maintenances.stream()
                 .map(m -> m.getCost() != null ? m.getCost() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -235,7 +242,7 @@ public class DashboardServiceImpl implements DashboardService {
         // === 物件 ===
         List<BusItem> items = itemMapper.selectList(new LambdaQueryWrapper<BusItem>()
                 .eq(BusItem::getFamilyId, familyId)
-                .eq(BusItem::getDelFlag, DEL_FLAG_NORMAL));
+                );
         summary.put("itemCount", items.size());
 
         // 物件费用汇总
@@ -243,7 +250,7 @@ public class DashboardServiceImpl implements DashboardService {
         List<BusItemCost> allCosts = itemIds.isEmpty() ? List.of() :
                 itemCostMapper.selectList(new LambdaQueryWrapper<BusItemCost>()
                         .in(BusItemCost::getItemId, itemIds)
-                        .eq(BusItemCost::getDelFlag, DEL_FLAG_NORMAL));
+                        );
         Map<Long, BigDecimal> costSumMap = allCosts.stream()
                 .collect(Collectors.groupingBy(BusItemCost::getItemId,
                         Collectors.mapping(BusItemCost::getCost,

@@ -31,7 +31,6 @@ public class RoleServiceImpl implements RoleService {
     public Page<SysRole> pageRole(Integer pageNum, Integer pageSize, String keyword) {
         Page<SysRole> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getDelFlag, DEL_FLAG_NORMAL)
                 .and(StringUtils.hasText(keyword), w -> w
                         .like(SysRole::getName, keyword)
                         .or()
@@ -43,7 +42,6 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<SysRole> listAll() {
         return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getDelFlag, DEL_FLAG_NORMAL)
                 .eq(SysRole::getStatus, STATUS_ENABLE)
                 .orderByAsc(SysRole::getSort));
     }
@@ -61,8 +59,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(rollbackFor = Exception.class)
     public void addRole(SysRole role) {
         Long count = roleMapper.selectCount(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getCode, role.getCode())
-                .eq(SysRole::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(SysRole::getCode, role.getCode()));
         if (count > 0) {
             throw new BusinessException("角色编码已存在");
         }
@@ -86,8 +83,7 @@ public class RoleServiceImpl implements RoleService {
         if (role == null) {
             throw new BusinessException("角色不存在");
         }
-        role.setDelFlag(DEL_FLAG_DELETED);
-        roleMapper.updateById(role);
+        roleMapper.deleteById(id);
     }
 
     @Override

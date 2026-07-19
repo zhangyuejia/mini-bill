@@ -41,7 +41,6 @@ public class SavingServiceImpl implements SavingService {
     public List<BusSavingItem> getSavingItemsByMember(Long familyId, Long memberId) {
         LambdaQueryWrapper<BusSavingItem> wrapper = new LambdaQueryWrapper<BusSavingItem>()
                 .eq(BusSavingItem::getFamilyId, familyId)
-                .eq(BusSavingItem::getDelFlag, DEL_FLAG_NORMAL)
                 .eq(BusSavingItem::getStatus, STATUS_ENABLE);
         // memberId=0 查全部，否则查指定成员
         if (memberId != null && memberId != 0) {
@@ -56,8 +55,7 @@ public class SavingServiceImpl implements SavingService {
         Long count = savingItemMapper.selectCount(new LambdaQueryWrapper<BusSavingItem>()
                 .eq(BusSavingItem::getFamilyId, item.getFamilyId())
                 .eq(BusSavingItem::getMemberId, item.getMemberId())
-                .eq(BusSavingItem::getName, item.getName())
-                .eq(BusSavingItem::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(BusSavingItem::getName, item.getName()));
         if (count > 0) {
             throw new BusinessException("该成员已存在同名储蓄项");
         }
@@ -76,8 +74,7 @@ public class SavingServiceImpl implements SavingService {
     public void deleteSavingItem(Long id) {
         BusSavingItem item = savingItemMapper.selectById(id);
         if (item != null) {
-            item.setDelFlag(DEL_FLAG_DELETED);
-            savingItemMapper.updateById(item);
+            savingItemMapper.deleteById(id);
         }
     }
 
@@ -91,7 +88,6 @@ public class SavingServiceImpl implements SavingService {
                 .eq(BusFamilySaving::getFamilyId, familyId)
                 .ge(StringUtils.hasText(savingDateStart), BusFamilySaving::getSavingDate, StringUtils.hasText(savingDateStart) ? LocalDate.parse(savingDateStart) : null)
                 .le(StringUtils.hasText(savingDateEnd), BusFamilySaving::getSavingDate, StringUtils.hasText(savingDateEnd) ? LocalDate.parse(savingDateEnd) : null)
-                .eq(BusFamilySaving::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByDesc(BusFamilySaving::getSavingDate);
         Page<BusFamilySaving> result = familySavingMapper.selectPage(page, wrapper);
 
@@ -132,8 +128,7 @@ public class SavingServiceImpl implements SavingService {
     public void deleteFamilySaving(Long id) {
         BusFamilySaving saving = familySavingMapper.selectById(id);
         if (saving != null) {
-            saving.setDelFlag(DEL_FLAG_DELETED);
-            familySavingMapper.updateById(saving);
+            familySavingMapper.deleteById(id);
         }
     }
 

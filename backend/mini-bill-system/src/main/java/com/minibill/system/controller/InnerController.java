@@ -31,7 +31,7 @@ public class InnerController {
         SysUser user = userMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
                         .eq(SysUser::getUsername, username)
-                        .eq(SysUser::getDelFlag, 0));
+                        );
         return toUserDTO(user);
     }
 
@@ -40,7 +40,7 @@ public class InnerController {
         SysUser user = userMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
                         .eq(SysUser::getEmail, email)
-                        .eq(SysUser::getDelFlag, 0));
+                        );
         return toUserDTO(user);
     }
 

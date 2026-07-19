@@ -13,9 +13,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.minibill.common.constant.Constants.DEL_FLAG_DELETED;
-import static com.minibill.common.constant.Constants.DEL_FLAG_NORMAL;
-
 /**
  * 菜单管理服务实现
  */
@@ -28,7 +25,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<SysMenu> getMenuTree() {
         List<SysMenu> allMenus = menuMapper.selectList(new LambdaQueryWrapper<SysMenu>()
-                .eq(SysMenu::getDelFlag, DEL_FLAG_NORMAL)
                 .orderByAsc(SysMenu::getSort));
         return buildTree(allMenus);
     }
@@ -71,15 +67,13 @@ public class MenuServiceImpl implements MenuService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteMenu(Long id) {
         Long childCount = menuMapper.selectCount(new LambdaQueryWrapper<SysMenu>()
-                .eq(SysMenu::getParentId, id)
-                .eq(SysMenu::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(SysMenu::getParentId, id));
         if (childCount > 0) {
             throw new BusinessException("请先删除子菜单");
         }
         SysMenu menu = menuMapper.selectById(id);
         if (menu != null) {
-            menu.setDelFlag(DEL_FLAG_DELETED);
-            menuMapper.updateById(menu);
+            menuMapper.deleteById(id);
         }
     }
 

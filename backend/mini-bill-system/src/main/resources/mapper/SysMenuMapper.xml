@@ -19,7 +19,7 @@
         SELECT DISTINCT m.* FROM sys_role_menu rm
         LEFT JOIN sys_menu m ON rm.menu_id = m.id
         WHERE rm.role_id IN (SELECT role_id FROM sys_user_role WHERE user_id = #{userId})
-        AND m.del_flag = 0 AND m.visible = 0
+        AND m.visible = 0
         ORDER BY m.sort ASC
     </select>
 

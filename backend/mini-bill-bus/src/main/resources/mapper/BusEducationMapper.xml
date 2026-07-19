@@ -5,11 +5,10 @@
     <select id="pageWithMember" resultType="com.minibill.bus.entity.BusEducation">
         SELECT e.id, e.member_id, e.semester_date,
                e.tuition, e.meal_fee, e.accommodation_fee, e.remark,
-               e.create_time, e.update_time, e.create_by, e.update_by, e.del_flag
+               e.create_time, e.update_time, e.create_by, e.update_by
         FROM bus_education e
         LEFT JOIN bus_family_member m ON e.member_id = m.user_id
         <where>
-            e.del_flag = 0
             <if test="familyId != null">AND m.family_id = #{familyId}</if>
             <if test="memberId != null">AND e.member_id = #{memberId}</if>
             <if test="semesterDateStart != null and semesterDateStart != ''">AND e.semester_date &gt;= #{semesterDateStart}::date</if>

@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS bus_education (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     create_by BIGINT DEFAULT 0,
     update_by BIGINT DEFAULT 0,
-    del_flag INTEGER DEFAULT 0
 );
 
 COMMENT ON TABLE bus_education IS '教育费用表';

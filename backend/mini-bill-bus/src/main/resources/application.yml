@@ -26,9 +26,10 @@ spring:
       discovery:
         server-addr: 192.168.0.121:8848
         namespace: mini-bill
-        username: nacos
-        password: nacos
+      username: nacos
+      password: nacos
       config:
+        enabled: false
         import-check:
           enabled: false
 
@@ -37,9 +38,6 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: ASSIGN_ID
-      logic-delete-field: delFlag
-      logic-delete-value: 1
-      logic-not-delete-value: 0
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
@@ -51,6 +49,7 @@ minibill:
   inspection:
     interval: 1800000   # 巡检间隔（毫秒），默认30分钟
     enabled: true        # 是否启用巡检任务
+    lookback-months: 36  # 巡检回溯月数，默认36个月（近3年）
 
 # 日志配置
 logging:

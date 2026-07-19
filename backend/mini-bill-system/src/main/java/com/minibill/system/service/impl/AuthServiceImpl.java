@@ -42,7 +42,6 @@ public class AuthServiceImpl implements AuthService {
         // 支持用户名或邮箱登录
         SysUser user = userMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
-                        .eq(SysUser::getDelFlag, DEL_FLAG_NORMAL)
                         .and(w -> w.eq(SysUser::getUsername, request.getUsername())
                                 .or()
                                 .eq(SysUser::getEmail, request.getUsername())));
@@ -75,8 +74,7 @@ public class AuthServiceImpl implements AuthService {
         // 检查用户名是否已存在
         Long count = userMapper.selectCount(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
-                        .eq(SysUser::getUsername, request.getUsername())
-                        .eq(SysUser::getDelFlag, DEL_FLAG_NORMAL));
+                        .eq(SysUser::getUsername, request.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
@@ -84,8 +82,7 @@ public class AuthServiceImpl implements AuthService {
         // 检查邮箱是否已注册
         count = userMapper.selectCount(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysUser>()
-                        .eq(SysUser::getEmail, request.getEmail())
-                        .eq(SysUser::getDelFlag, DEL_FLAG_NORMAL));
+                        .eq(SysUser::getEmail, request.getEmail()));
         if (count > 0) {
             throw new BusinessException("该邮箱已被注册");
         }
@@ -102,8 +99,7 @@ public class AuthServiceImpl implements AuthService {
         // 赋予默认角色
         SysRole defaultRole = roleMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysRole>()
-                        .eq(SysRole::getCode, SYS_DEFAULT_ROLE)
-                        .eq(SysRole::getDelFlag, DEL_FLAG_NORMAL));
+                        .eq(SysRole::getCode, SYS_DEFAULT_ROLE));
         if (defaultRole != null) {
             SysUserRole userRole = new SysUserRole();
             userRole.setUserId(user.getId());

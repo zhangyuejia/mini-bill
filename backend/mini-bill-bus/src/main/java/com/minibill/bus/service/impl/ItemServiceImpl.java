@@ -59,8 +59,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<BusItem> listItemsByAddress(Long addressId) {
         return itemMapper.selectList(new LambdaQueryWrapper<BusItem>()
-                .eq(BusItem::getAddressId, addressId)
-                .eq(BusItem::getDelFlag, DEL_FLAG_NORMAL));
+                .eq(BusItem::getAddressId, addressId));
     }
 
     @Override

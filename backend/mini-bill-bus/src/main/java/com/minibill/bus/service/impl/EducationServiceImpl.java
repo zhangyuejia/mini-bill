@@ -112,8 +112,7 @@ public class EducationServiceImpl implements EducationService {
     public void delete(Long id) {
         BusEducation e = educationMapper.selectById(id);
         if (e != null) {
-            e.setDelFlag(DEL_FLAG_DELETED);
-            educationMapper.updateById(e);
+            educationMapper.deleteById(id);
         }
     }
 
