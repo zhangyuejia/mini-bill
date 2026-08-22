@@ -5,13 +5,13 @@ spring:
   application:
     name: mini-bill-system
   datasource:
-    url: jdbc:postgresql://192.168.0.121:5432/mini-bill-system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:postgresql://127.0.0.1:5432/mini-bill-system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: wmsuser
     password: 123456
     driver-class-name: org.postgresql.Driver
   data:
     redis:
-      host: 192.168.0.121
+      host: 127.0.0.1
       port: 6379
       password: 123456
       database: 0
@@ -33,7 +33,7 @@ spring:
       username: nacos
       password: nacos
       discovery:
-        server-addr: 192.168.0.121:8848
+        server-addr: 127.0.0.1:8848
         namespace: mini-bill
       config:
         enabled: false
