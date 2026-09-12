@@ -42,9 +42,11 @@ public class SavingServiceImpl implements SavingService {
         LambdaQueryWrapper<BusSavingItem> wrapper = new LambdaQueryWrapper<BusSavingItem>()
                 .eq(BusSavingItem::getFamilyId, familyId)
                 .eq(BusSavingItem::getStatus, STATUS_ENABLE);
-        // memberId=0 查全部，否则查指定成员
+        // memberId=0 查全部；否则查指定成员（家庭级储蓄项 memberId=0 属于全家，一并返回）
         if (memberId != null && memberId != 0) {
-            wrapper.eq(BusSavingItem::getMemberId, memberId);
+            wrapper.and(w -> w.eq(BusSavingItem::getMemberId, memberId)
+                    .or()
+                    .eq(BusSavingItem::getMemberId, 0L));
         }
         return savingItemMapper.selectList(wrapper);
     }
@@ -57,7 +59,7 @@ public class SavingServiceImpl implements SavingService {
                 .eq(BusSavingItem::getMemberId, item.getMemberId())
                 .eq(BusSavingItem::getName, item.getName()));
         if (count > 0) {
-            throw new BusinessException("该成员已存在同名储蓄项");
+            throw new BusinessException("该归属（成员或家庭）已存在同名储蓄项");
         }
         item.setStatus(STATUS_ENABLE);
         savingItemMapper.insert(item);

@@ -18,6 +18,11 @@
               {{ getMemberTotal(row, m.userId) }}
             </template>
           </el-table-column>
+          <el-table-column label="家庭" width="150" align="right">
+            <template #default="{ row }">
+              {{ getMemberTotal(row, 0) }}
+            </template>
+          </el-table-column>
           <el-table-column prop="totalAmount" label="合计" width="150" align="right"><template #default="{ row }"><strong style="color:#409eff;font-size:16px;">{{ row.totalAmount || 0 }}</strong></template></el-table-column>
           <el-table-column label="操作" width="240"><template #default="{ row }"><el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button><el-button link type="primary" size="small" @click="openDetailDialog(row)">明细</el-button><el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button></template></el-table-column>
         </el-table>
@@ -84,7 +89,7 @@ const showDetailDialog = ref(false); const currentSaving = ref(null); const curr
 const members = ref([])
 
 async function loadAllSavingItems() { if (!userStore.currentFamily) return; const res = await savingApi.getItems(userStore.currentFamily.id, 0); savingItems.value = res.data || [] }
-async function loadMemberNames() { if (!userStore.currentFamily) return; try { const res = await familyApi.getMembers(userStore.currentFamily.id); members.value = res.data || []; const map = {}; (res.data || []).forEach(m => { map[m.userId] = m.userName || `用户#${m.userId}` }); memberNames.value = map } catch(e) {} }
+async function loadMemberNames() { if (!userStore.currentFamily) return; try { const res = await familyApi.getMembers(userStore.currentFamily.id); members.value = res.data || []; const map = { 0: '家庭' }; (res.data || []).forEach(m => { map[m.userId] = m.userName || `用户#${m.userId}` }); memberNames.value = map } catch(e) {} }
 function getMemberDisplayName(userId) { return memberNames.value[userId] || `用户#${userId}` }
 function getSavingItemDisplayName(savingItemId) { const item = savingItems.value.find(i => i.id === savingItemId); return item?.name || `项#${savingItemId}` }
 
@@ -99,7 +104,7 @@ function getMemberTotal(row, memberId) {
   return memberRecords.reduce((s, r) => s + (Number(r.amount) || 0), 0)
 }
 
-// 构建所有成员的储蓄项记录列表
+// 构建所有成员的储蓄项记录列表（含家庭级储蓄项 memberId=0）
 function buildAllRecords() {
   const all = []
   for (const m of members.value) {
@@ -108,6 +113,10 @@ function buildAllRecords() {
       all.push({ savingItemId: item.id, memberId: m.userId, amount: null })
     })
   }
+  const familyItems = savingItems.value.filter(i => String(i.memberId) === String(0))
+  familyItems.forEach(item => {
+    all.push({ savingItemId: item.id, memberId: 0, amount: null })
+  })
   return all
 }
 
@@ -124,7 +133,7 @@ async function openEditDialog(row) {
   isEdit.value = true; currentSaving.value = row
   saveForm.value = { savingDate: row.savingDate || '' }
   saveRecords.value = buildAllRecords()
-  const existRecords = row.records || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
+  const existRecords = row.records || []; existRecords.forEach(er => { const match = saveRecords.value.find(r => r.savingItemId === er.savingItemId && String(r.memberId) === String(er.memberId)); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
   showSaveDialog.value = true
 }
 
@@ -155,7 +164,7 @@ async function saveSaving() {
 async function openDetailDialog(saving) {
   currentSaving.value = saving
   currentRecords.value = buildAllRecords()
-  const existRecords = saving.records || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && r.memberId === er.memberId); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
+  const existRecords = saving.records || []; existRecords.forEach(er => { const match = currentRecords.value.find(r => r.savingItemId === er.savingItemId && String(r.memberId) === String(er.memberId)); if (match) match.amount = isNaN(Number(er.amount)) ? null : Number(er.amount) })
   showDetailDialog.value = true
 }
 
