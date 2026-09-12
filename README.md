@@ -10,9 +10,9 @@
 |------|------|
 | 前端 | Vue 3 + Vite + Element Plus + Pinia + ECharts |
 | 后端 | Spring Boot 3 + Spring Cloud Gateway + MyBatis Plus |
-| 注册中心 | Nacos (192.168.0.121:8848, namespace: mini-bill) |
-| 数据库 | PostgreSQL (192.168.0.121:5432, 分库设计) |
-| 缓存 | Redis (192.168.0.121:6379) |
+| 注册中心 | Nacos (127.0.0.1:8848, namespace: mini-bill) |
+| 数据库 | PostgreSQL (127.0.0.1:5432, 分库设计) |
+| 缓存 | Redis (192.168.0.141:6379) |
 | 构建工具 | Maven (后端) / Vite (前端) |
 
 ### 微服务架构
@@ -167,9 +167,9 @@
 
 | 资源 | 地址/账号 |
 |------|-----------|
-| Nacos | 192.168.0.121:8848, namespace: mini-bill, 账号: nacos / nacos |
-| PostgreSQL | 192.168.0.121:5432, 账号: wmsuser / 123456 |
-| Redis | 192.168.0.121:6379, 密码: 123456 |
+| Nacos | 127.0.0.1:8848, namespace: mini-bill, 账号: nacos / nacos |
+| PostgreSQL | 127.0.0.1:5432, 账号: wmsuser / 123456 |
+| Redis | 192.168.0.141:6379, 密码: 123456 |
 | SMTP | 1099822863@qq.com (授权码: vogprcuszxmcfhad) |
 
 ## 本地开发
@@ -211,13 +211,13 @@ npm run build
 
 ```bash
 # 执行 schema 脚本
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-system -f backend/mini-bill-system/src/main/resources/schema.sql
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/schema.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-system -f backend/mini-bill-system/src/main/resources/schema.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/schema.sql
 
 # 执行迁移脚本（如果使用了旧版 schema）
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_unify_attachment.sql
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_add_maintenance.sql
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_add_education.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_unify_attachment.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_add_maintenance.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/migration_add_education.sql
 ```
 
 迁移脚本位于 `backend/mini-bill-bus/src/main/resources/`：
@@ -239,8 +239,8 @@ psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-b
 
 ```bash
 # 1. 执行数据库初始化脚本
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-system -f backend/mini-bill-system/src/main/resources/schema.sql
-psql -h 192.168.0.121 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/schema.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-system -f backend/mini-bill-system/src/main/resources/schema.sql
+psql -h 192.168.0.141 -p 5432 -U wmsuser -d mini-bill-bus -f backend/mini-bill-bus/src/main/resources/schema.sql
 
 # 2. 构建后端
 cd backend && mvn clean package -DskipTests

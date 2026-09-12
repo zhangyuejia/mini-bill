@@ -37,8 +37,8 @@
     <div v-else class="empty-tip"><el-empty description="请先创建或切换到家庭" /></div>
 
     <!-- 教育费用 新增/编辑 -->
-    <el-dialog :close-on-click-modal="false" v-model="showEduDlg" :title="isEduEdit?'编辑教育费用':'新增教育费用'" width="600px">
-      <el-form :model="eduForm" label-width="100px">
+    <el-dialog :close-on-click-modal="false" v-model="showEduDlg" :title="isEduEdit?'编辑教育费用':'新增教育费用'" width="800px">
+      <el-form :model="eduForm" label-width="80px">
         <el-row :gutter="16"><el-col :span="12"><el-form-item label="成员" required><el-select v-model="eduForm.memberId" placeholder="选择成员" style="width:100%"><el-option v-for="m in members" :key="m.userId" :label="m.userName||'用户#'+m.userId" :value="m.userId" /></el-select></el-form-item></el-col><el-col :span="12"><el-form-item label="学期" required><el-date-picker v-model="eduForm.semesterDate" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item></el-col></el-row>
         <el-row :gutter="16"><el-col :span="8"><el-form-item label="学费"><el-input-number v-model="eduForm.tuition" :min="0" :precision="2" style="width:100%" /></el-form-item></el-col><el-col :span="8"><el-form-item label="伙食费"><el-input-number v-model="eduForm.mealFee" :min="0" :precision="2" style="width:100%" /></el-form-item></el-col><el-col :span="8"><el-form-item label="住宿费"><el-input-number v-model="eduForm.accommodationFee" :min="0" :precision="2" style="width:100%" /></el-form-item></el-col></el-row>
         <el-form-item label="备注"><el-input v-model="eduForm.remark" type="textarea" :rows="2" /></el-form-item>
@@ -140,7 +140,14 @@ function handleQuery() { pageNum.value = 1; fetchData() }
 // === Education CRUD ===
 function showEduDialog(row) {
   isEduEdit.value = !!row
-  eduForm.value = row ? { memberId: row.memberId, semesterDate: row.semesterDate, tuition: row.tuition, mealFee: row.mealFee, accommodationFee: row.accommodationFee, remark: row.remark } : { memberId: null, semesterDate: '', tuition: null, mealFee: null, accommodationFee: null, remark: '' }
+  eduForm.value = row ? { id: row.id, memberId: row.memberId, semesterDate: row.semesterDate, tuition: row.tuition, mealFee: row.mealFee, accommodationFee: row.accommodationFee, remark: row.remark, _items: (row.items||[]).map(i=>({ costDate: i.costDate, itemType: i.itemType, amount: i.amount, remark: i.remark })) } : { memberId: null, semesterDate: '', tuition: null, mealFee: null, accommodationFee: null, remark: '' }
+  if (row) {
+    // API 返回的 BigDecimal 为字符串，需转为 Number，否则 el-input-number 无法回显/输入
+    const toNum = (v) => isNaN(Number(v)) ? null : Number(v)
+    eduForm.value.tuition = toNum(eduForm.value.tuition)
+    eduForm.value.mealFee = toNum(eduForm.value.mealFee)
+    eduForm.value.accommodationFee = toNum(eduForm.value.accommodationFee)
+  }
   eduAttList.value = row?.attachments ? row.attachments.map(a=>({...a,_isNew:false})) : []
   showEduDlg.value = true
 }
@@ -152,7 +159,7 @@ async function saveEdu() {
   try {
     const education = { ...eduForm.value, id: isEduEdit.value ? eduForm.value.id : undefined }
     let eduId = education.id
-    if (isEduEdit.value) { await educationApi.update({ education, items: [] }) } else { const res = await educationApi.add({ education, items: [] }); eduId = res.data?.id||eduId }
+    if (isEduEdit.value) { await educationApi.update({ education, items: eduForm.value._items || [] }) } else { const res = await educationApi.add({ education, items: [] }); eduId = res.data?.id||eduId }
     for (const att of eduAttList.value) { if (att._isNew && eduId) { try { await educationApi.addAttachment(eduId, { fileName: att.fileName, fileUrl: att.fileUrl, fileSize: att.fileSize }) } catch(e) {} } }
     ElMessage.success('保存成功'); showEduDlg.value = false; fetchData()
   } finally { eduSaving.value = false }
@@ -172,6 +179,7 @@ async function openItems(row) {
 function showItemForm(row) {
   isItemEdit.value = !!row; currentItemId.value = row?.id || null
   itemForm.value = row ? { costDate: row.costDate||'', itemType: row.itemType, amount: row.amount, remark: row.remark||'' } : { costDate: '', itemType: '', amount: null, remark: '' }
+  if (row) { itemForm.value.amount = isNaN(Number(row.amount)) ? null : Number(row.amount) }
   itemAttList.value = row?.attachments ? row.attachments.map(a=>({...a,_isNew:false})) : []
   showItemDlg.value = true
 }
