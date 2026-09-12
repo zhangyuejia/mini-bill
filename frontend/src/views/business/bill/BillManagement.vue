@@ -37,7 +37,7 @@
 
     <el-dialog :close-on-click-modal="false" v-model="showDlg" :title="isEdit ? '编辑账单' : '新增账单'" width="800px" class="bill-dialog">
       <el-form ref="formRef" :model="form" label-width="110px">
-        <el-row :gutter="16"><el-col :span="12"><el-form-item label="住址" required><el-select v-model="form.addressId" placeholder="选择住址" style="width:100%" @change="onAddressChange"><el-option v-for="a in addresses" :key="a.id" :label="a.name" :value="a.id" /></el-select></el-form-item></el-col><el-col :span="12"><el-form-item label="账期" required><el-date-picker v-model="form.period" type="month" placeholder="选择月份" value-format="YYYYMM" style="width:100%" /></el-form-item></el-col></el-row>
+        <el-row :gutter="16"><el-col :span="12"><el-form-item label="住址" required><el-select v-model="form.addressId" placeholder="选择住址" style="width:100%" @change="onAddressChange"><el-option v-for="a in addresses" :key="a.id" :label="a.name" :value="a.id" /></el-select></el-form-item></el-col><el-col :span="12"><el-form-item label="账期" required><el-date-picker v-model="form.period" type="month" placeholder="选择月份" value-format="YYYYMM" style="width:100%" @change="onPeriodChange" /></el-form-item></el-col></el-row>
         <el-divider content-position="left" class="section-divider">房租</el-divider>
         <el-form-item label="房租"><el-input-number v-model="form.rent" :min="0" :precision="2" style="width:200px" /></el-form-item>
         <el-divider content-position="left" class="section-divider">电费</el-divider>
@@ -93,6 +93,54 @@ function onAddressChange(val) {
   if (addr.defaultElectricPrice != null && form.value.electricUnitPrice == null) form.value.electricUnitPrice = addr.defaultElectricPrice
   if (addr.defaultWaterPrice != null && form.value.waterUnitPrice == null) form.value.waterUnitPrice = addr.defaultWaterPrice
   if (addr.defaultManagementFee != null && form.value.managementFee == null) form.value.managementFee = addr.defaultManagementFee
+  checkPeriodAndFill()
+}
+
+function onPeriodChange() { checkPeriodAndFill() }
+
+// 上月账期：YYYYMM → 上一个月的 YYYYMM（数字）
+function prevPeriod(p) {
+  const s = String(p); const y = Number(s.slice(0, 4)); const m = Number(s.slice(4, 6))
+  const d = new Date(y, m - 2, 1)
+  return Number(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`)
+}
+
+let lastWarnKey = ''
+let fillSeq = 0
+// 选择住址/账期后：
+// 1. 当前账期已存在 → 提示账期已存在
+// 2. 当前账期不存在 且 上月账期存在 → 自动填充上月表底（取上月账单的本月表底）
+// 3. 上月账期不存在 → 清空上月表底，避免残留上次自动填充的值
+function clearPrevReadings() { form.value.electricPrevReading = null; form.value.waterPrevReading = null }
+
+async function checkPeriodAndFill() {
+  if (isEdit.value) return
+  const familyId = userStore.currentFamily?.id
+  const { addressId, period } = form.value
+  if (!familyId || !addressId || !period) return
+  const key = `${addressId}-${period}`
+  const seq = ++fillSeq
+  try {
+    const curRes = await billApi.page({ pageNum: 1, pageSize: 1, familyId, addressId, periodStart: Number(period), periodEnd: Number(period) })
+    if (seq !== fillSeq) return
+    if ((Number(curRes.data?.total) || 0) > 0) {
+      if (lastWarnKey !== key) { lastWarnKey = key; ElMessage.warning('账期已存在') }
+      clearPrevReadings()
+      return
+    }
+    lastWarnKey = ''
+    const prev = prevPeriod(period)
+    const prevRes = await billApi.page({ pageNum: 1, pageSize: 1, familyId, addressId, periodStart: prev, periodEnd: prev })
+    if (seq !== fillSeq) return
+    const pb = (prevRes.data?.records || [])[0]
+    if (!pb) { clearPrevReadings(); return }
+    const toNum = (v) => (v == null || isNaN(Number(v))) ? null : Number(v)
+    const electric = toNum(pb.electricCurrReading)
+    const water = toNum(pb.waterCurrReading)
+    form.value.electricPrevReading = electric
+    form.value.waterPrevReading = water
+    if (electric != null || water != null) ElMessage.success('已自动填充上月表底')
+  } catch (e) { /* 忽略查询异常，不阻断表单填写 */ }
 }
 
 function summaryMethod({ columns, data }) {
@@ -121,7 +169,7 @@ async function fetchData() {
 function handleQuery() { pageNum.value = 1; fetchData() }
 
 function showDialog(row) {
-  isEdit.value = !!row; form.value = row ? { ...row, period: row.period ? String(row.period) : "" } : { ...createEmptyForm(), familyId: userStore.currentFamily?.id }; attachmentList.value = []
+  isEdit.value = !!row; form.value = row ? { ...row, period: row.period ? String(row.period) : "" } : { ...createEmptyForm(), familyId: userStore.currentFamily?.id }; attachmentList.value = []; lastWarnKey = ''
   // 确保所有数字字段为 Number 类型（API 返回的可能为字符串）
   if (row) {
     const toNum = (v) => isNaN(Number(v)) ? null : Number(v)
